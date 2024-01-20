@@ -6,9 +6,11 @@ public class Task {
     protected Integer id;
     protected TaskStatus status;
 
+    // в конструкторе учесть, что новой задаче по-умолчанию присваивается статус NEW
     public Task(String title, String description) {
         this.title = title;
         this.description = description;
+        this.status = TaskStatus.NEW;
     }
 
     @Override
@@ -32,6 +34,22 @@ public class Task {
                 ", description='" + description + '\'' +
                 ", id='" + id + '\'' +
                 ", status='" + status + '}' + '\'';
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
     }
 
     public Integer getId() {

@@ -50,12 +50,11 @@ public class Main {
         task1.setStatus(TaskStatus.DONE);
         subTask5.setStatus(TaskStatus.DONE);
         subTask6.setStatus(TaskStatus.DONE);
-        taskManager.checkEpicStatus(3);
 
         System.out.println(" ");
         System.out.println("Новые статусы задачи id=1, эпика id=3, подзадач id=5 и id=6:");
         System.out.println(task1.getStatus());
-        System.out.println(epic3.getStatus());
+        System.out.println(taskManager.getEpicById(epic3.getId()).getStatus());
         System.out.println(subTask5.getStatus());
         System.out.println(subTask6.getStatus());
 
