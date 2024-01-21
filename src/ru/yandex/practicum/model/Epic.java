@@ -1,3 +1,5 @@
+package ru.yandex.practicum.model;
+
 import java.util.ArrayList;
 import java.util.Objects;
 

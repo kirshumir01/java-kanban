@@ -1,3 +1,10 @@
+import ru.yandex.practicum.model.Task;
+import ru.yandex.practicum.model.SubTask;
+import ru.yandex.practicum.model.Epic;
+import ru.yandex.practicum.model.TaskStatus;
+
+import ru.yandex.practicum.taskmanager.TaskManager;
+
 public class Main {
 
     public static void main(String[] args) {
@@ -51,10 +58,14 @@ public class Main {
         subTask5.setStatus(TaskStatus.DONE);
         subTask6.setStatus(TaskStatus.DONE);
 
+        taskManager.updateTask(task1);
+        taskManager.updateSubTask(subTask5);
+        taskManager.updateSubTask(subTask6);
+
         System.out.println(" ");
         System.out.println("Новые статусы задачи id=1, эпика id=3, подзадач id=5 и id=6:");
         System.out.println(task1.getStatus());
-        System.out.println(taskManager.getEpicById(epic3.getId()).getStatus());
+        System.out.println(epic3.getStatus());
         System.out.println(subTask5.getStatus());
         System.out.println(subTask6.getStatus());
 

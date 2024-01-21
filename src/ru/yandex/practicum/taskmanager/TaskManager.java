@@ -1,6 +1,13 @@
+package ru.yandex.practicum.taskmanager;
+
+import ru.yandex.practicum.model.Task;
+import ru.yandex.practicum.model.SubTask;
+import ru.yandex.practicum.model.Epic;
+import ru.yandex.practicum.model.TaskStatus;
+
+
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 
 public class TaskManager {
     public int defaultId = 0;
@@ -10,14 +17,9 @@ public class TaskManager {
 
     public ArrayList<Task> getListOfTasks() {
         return new ArrayList<>(taskHashMap.values());
-
     }
 
     public ArrayList<Epic> getListOfEpics() {
-        // проверить статусы эпиков до вывода списка
-        for (Epic epic : epicHashMap.values()) {
-            checkEpicStatus(epic.getId());
-        }
         return new ArrayList<>(epicHashMap.values());
     }
 
@@ -57,13 +59,11 @@ public class TaskManager {
         return taskHashMap.get(id);
     }
 
-    public Epic getEpicById (int id) {
-        // проверить статус эпика до вывода
-        checkEpicStatus(id);
+    public Epic getEpicById(int id) {
         return epicHashMap.get(id);
     }
 
-    public SubTask getSubTaskById (int id) {
+    public SubTask getSubTaskById(int id) {
         return subTaskHashMap.get(id);
     }
 
@@ -77,9 +77,8 @@ public class TaskManager {
         epicHashMap.put(newEpic.getId(), newEpic);
     }
 
-    public void addSubTask (SubTask newSubTask) {
+    public void addSubTask(SubTask newSubTask) {
         newSubTask.setId(++defaultId);
-        newSubTask.setStatus(TaskStatus.NEW);
         subTaskHashMap.put(newSubTask.getId(), newSubTask);
         // получить идентификатор эпика
         // создать список идентификаторов подзадач соответствующего эпика
@@ -90,7 +89,7 @@ public class TaskManager {
         checkEpicStatus(epicId);
     }
 
-    public void updateTask (Task newTask) {
+    public void updateTask(Task newTask) {
         if (taskHashMap.containsKey(newTask.getId())) {
             taskHashMap.put(newTask.getId(), newTask);
         }
@@ -134,7 +133,7 @@ public class TaskManager {
         checkEpicStatus(epicId);
     }
 
-    public ArrayList<SubTask> getListOfSubTasksByEpic (int id) {
+    public ArrayList<SubTask> getListOfSubTasksByEpic(int id) {
         ArrayList<Integer> subTasksId = epicHashMap.get(id).getSubtasksId();
         ArrayList<SubTask> subtasksByEpic = new ArrayList<>();
         for (int subtaskId : subTasksId) {
@@ -143,7 +142,7 @@ public class TaskManager {
         return subtasksByEpic;
     }
 
-    private void checkEpicStatus (int id) {
+    private void checkEpicStatus(int id) {
         int countNewTasks = 0;
         int countDoneTasks = 0;
 
