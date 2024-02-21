@@ -1,4 +1,4 @@
-package ru.yandex.practicum.model;
+package ru.yandex.practicum.models;
 
 import java.util.Objects;
 
@@ -8,6 +8,10 @@ public class SubTask extends Task {
     public SubTask(String title, String description, int epicId) {
         super(title, description);
         this.epicId = epicId;
+    }
+
+    public int getEpicId() {
+        return epicId;
     }
 
     @Override
@@ -32,9 +36,5 @@ public class SubTask extends Task {
                 ", id='" + id + '\'' +
                 ", status='" + status + '}' + '\'' +
                 ", epic ID='" + epicId + '}' + '\'';
-    }
-
-    public int getEpicId() {
-        return epicId;
     }
 }

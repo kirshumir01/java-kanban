@@ -1,8 +1,8 @@
-import ru.yandex.practicum.managers.Managers;
-import ru.yandex.practicum.managers.TaskManager;
-import ru.yandex.practicum.model.Epic;
-import ru.yandex.practicum.model.SubTask;
-import ru.yandex.practicum.model.Task;
+import ru.yandex.practicum.services.Managers;
+import ru.yandex.practicum.services.taskmanager.TaskManager;
+import ru.yandex.practicum.models.Epic;
+import ru.yandex.practicum.models.SubTask;
+import ru.yandex.practicum.models.Task;
 
 
 public class Main {
@@ -12,18 +12,15 @@ public class Main {
 
         TaskManager taskManager = Managers.getDefault();
 
-        Task task1 = new Task("Спринт 4", "Изучить теорию");
-        Task task2 = new Task("Спринт 5", "Изучить теорию");
+        Task task1 = new Task("Спринт 6", "Изучить теорию");
+        Task task2 = new Task("Спринт 7", "Изучить теорию");
 
-        Epic epic3 = new Epic("ТЗ №4", "Решить задачу");
-        Epic epic4 = new Epic("ТЗ №5", "Решить задачу");
+        Epic epic3 = new Epic("ТЗ №6", "Решить задачу");
+        Epic epic4 = new Epic("ТЗ №7", "Решить задачу");
 
         SubTask subTask5 = new SubTask("Шаг №1", "Написать код", 3);
         SubTask subTask6 = new SubTask("Шаг №2", "Отправить решение на проверку", 3);
-
-        SubTask subTask7 = new SubTask("Шаг №1", "Разобраться в условиях задачи", 4);
-        SubTask subTask8 = new SubTask("Шаг №2", "Написать код", 4);
-
+        SubTask subTask7 = new SubTask("Шаг №3", "Внести правки в код", 3);
 
         // проверка работы истории просмотров задач
         taskManager.addTask(task1);
@@ -35,33 +32,46 @@ public class Main {
         taskManager.addSubTask(subTask5);
         taskManager.addSubTask(subTask6);
         taskManager.addSubTask(subTask7);
-        taskManager.addSubTask(subTask8);
 
         printAllTasks(taskManager);
     }
-    private static void printAllTasks(TaskManager manager) {
-        System.out.println("Задачи:");
-        for (Task task : manager.getListOfTasks()) {
-            manager.getTaskById(task.getId());
-            System.out.println(task);
-        }
-        System.out.println("\nЭпики:");
-        for (Task epic : manager.getListOfEpics()) {
-            manager.getEpicById(epic.getId());
-            System.out.println(epic);
 
-            for (Task subTask : manager.getListOfSubTasksByEpic(epic.getId())) {
-                manager.getSubTaskById(subTask.getId());
-                System.out.println("--> " + subTask);
-            }
-        }
-        System.out.println("\nПодзадачи:");
-        for (Task subtask : manager.getListOfSubTasks()) {
-            manager.getSubTaskById(subtask.getId());
-            System.out.println(subtask);
-        }
+    // дополнительная реализация технического задания
+    private static void printAllTasks(TaskManager manager) {
+        manager.getTaskById(1);
+        manager.getTaskById(2);
+        manager.getTaskById(1);
+        manager.getTaskById(2);
+
+        manager.getEpicById(4);
+        manager.getEpicById(3);
+        manager.getEpicById(4);
+        manager.getEpicById(3);
+
+        manager.getSubTaskById(5);
+        manager.getSubTaskById(7);
+        manager.getSubTaskById(6);
+        manager.getSubTaskById(6);
+        manager.getSubTaskById(5);
+        manager.getSubTaskById(7);
 
         System.out.println("\nИстория просмотров:");
+        for (int i = 0; i < manager.getHistory().size(); i++) {
+            System.out.println((i + 1) + ". " + manager.getHistory().get(i));
+        }
+
+        System.out.println("\nУдаление задачи с id = 1");
+        manager.removeTaskById(1);
+
+        System.out.println("\nИстория просмотров после удаления задачи с id = 1:");
+        for (int i = 0; i < manager.getHistory().size(); i++) {
+            System.out.println((i + 1) + ". " + manager.getHistory().get(i));
+        }
+
+        System.out.println("\nУдаление эпика с id = 3, в котором сохранены 3 подзадачи");
+        manager.removeEpicById(3);
+
+        System.out.println("\nИстория просмотров после удаления эпика с id = 3:");
         for (int i = 0; i < manager.getHistory().size(); i++) {
             System.out.println((i + 1) + ". " + manager.getHistory().get(i));
         }
