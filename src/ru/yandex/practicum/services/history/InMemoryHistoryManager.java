@@ -1,99 +1,104 @@
 package ru.yandex.practicum.services.history;
 import ru.yandex.practicum.models.Task;
 
-import java.util.*;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Map;
+import java.util.HashMap;
 
 public class InMemoryHistoryManager implements HistoryManager {
     // создать хэш-таблицу: ключ - id Task, значение - узел связного списка, который хранит ссылку на Task
-    private final Map<Integer, Node> nodesByTaskId = new HashMap<Integer, Node>();
-    // создать двусвязный список, который сохраняет Task со ссылкой на её позицию в списке
-    private final List<Task> nodesOfTasks = new LinkedList<>();
+    protected Map<Integer, Node> nodesByTaskIdMap = new HashMap<Integer, Node>();
+    private Node<Task> first;
     private Node<Task> last;
+    private int size = 0;
 
-    // создать метод linkLast, который добавляет Task в связный список
     private void linkLast(Task task) {
-        // текущий элемент в списке станет предыдущим для добавляемого элемента Task
-        Node<Task> currentNode = last;
-        // определить позицию (ссылку) в списке для элемента Task, планируемого к добавлению в список
-        Node<Task> newNode = new Node<>(last, task, null);
-        // если связный список пуст, добавляемый task станет первым и последним (last)
-        if (last == null) {
-            last = newNode;
-        // иначе - добавляемый task займет следйющую позицию и становится последним (last)
+        final Node<Task> currentNode = last;
+        final Node<Task> newNode = new Node<>(currentNode, task, null);
+        last = newNode;
+
+        if (currentNode == null) {
+            first = newNode;
         } else {
             currentNode.next = newNode;
-            last = newNode;
         }
+        size++;
     }
 
-    // переопределить метод с учетом новых требований - удаление из истории просмотра повторных просмотров
-    // в истории должен остаться только последний просмотр задачи
-    @Override
-    public void addHistory(Task task) {
-        // если nodesByTask пуст - определить позицию task в связном списке и добавить в хэш-мапу с привязкой по id task
-        if (nodesByTaskId.isEmpty()) {
-            linkLast(task);
-            nodesOfTasks.add(task);
-            nodesByTaskId.put(task.getId(), last);
-        // иначе - если nodesByTask не пуст, выполнить поиск task по id в хэш-таблице
-        } else {
-            if (nodesByTaskId.containsKey(task.getId())) {
-                Map<Integer, Node> newTasks = new HashMap<>(nodesByTaskId);
-                // если в хэш-мапе уже сохранен просмотр task, выполнить поиск task по id и удалить узел и просмотр
-                for (Integer id : newTasks.keySet()) {
-                    if (id == task.getId()) {
-                        // в отличии от ArrayList элементы после удаления в связном списке не смещаются
-                        // это обеспечивает константную сложность O(1) выполнения операции удаления
-                        // удалить узел task из связного списка nodesOfTasks
-                        removeNode(newTasks.get(task.getId()));
-                        // определить позицию (ссылку) для task в связном списке
-                        // и добавить в хэш-мапу новый просмотр task
-                        linkLast(task);
-                        nodesOfTasks.add(task);
-                        nodesByTaskId.put(task.getId(), last);
-                    }
-                }
-            // иначе - если task ранее не было в истории просмотров, добавить task в хэш-мапу
-            } else {
-                linkLast(task);
-                nodesOfTasks.add(task);
-                nodesByTaskId.put(task.getId(), last);
-            }
+    private List<Task> getTasks() {
+        List<Task> historyList = new ArrayList<>();
+        Node<Task> node = first;
+
+        while (node != null) {
+            historyList.add(node.data);
+            node = node.next;
         }
+        return historyList;
     }
 
-    // определить метод для удаления узла task из спика nodesOfTasks
-    public void removeNode(Node<Task> node) {
+    private void removeNode(Node node) {
         Node<Task> prev = node.prev;
         Node<Task> next = node.next;
 
-        if (prev == null) {
-            next = null;
-            nodesOfTasks.remove(node.getData());
-            nodesByTaskId.remove(node.getData().getId());
+        // обнулить узлы
+        if (size == 1) {
+            first = null;
+            node.data = null;
+            last = null;
+        } else if (prev == null) {
+            first = next;
+            next.prev = null;
+            node.next = null;
+            node.data = null;
         } else if (next == null) {
+            last = prev;
             prev.next = null;
-            nodesOfTasks.remove(node.getData());
-            nodesByTaskId.remove(node.getData().getId());
+            node.prev = null;
+            node.data = null;
         } else {
-            next.prev = prev.next;
-            prev.next = next.prev;
-            nodesOfTasks.remove(node.getData());
-            nodesByTaskId.remove(node.getData().getId());
+            prev.next = next;
+            next.prev = prev;
+            node.next = null;
+            node.prev = null;
+            node.data = null;
+        }
+        if (size != 0) {
+            size--;
         }
     }
 
-    // переопределить метод удаления задачи из истории просмотра
+    @Override
+    public void add(Task task) {
+        if (nodesByTaskIdMap.isEmpty()) {
+            linkLast(task);
+            nodesByTaskIdMap.put(task.getId(), last);
+        } else {
+            if (nodesByTaskIdMap.containsKey(task.getId())) {
+                for (Integer id : nodesByTaskIdMap.keySet()) {
+                    if (id == task.getId()) {
+                        removeNode(nodesByTaskIdMap.get(task.getId()));
+                        linkLast(task);
+                        nodesByTaskIdMap.put(task.getId(), last);
+                    }
+                }
+            } else {
+                linkLast(task);
+                nodesByTaskIdMap.put(task.getId(), last);
+            }
+        }
+
+    }
+
     @Override
     public void remove(int id) {
-        if (nodesByTaskId.get(id) != null) {
-            removeNode(nodesByTaskId.get(id));
+        if (nodesByTaskIdMap.get(id) != null) {
+            removeNode(nodesByTaskIdMap.get(id));
         }
     }
 
-    // вернуть список истории просмотров, приведенный из связного списка к ArrayList<>()
     @Override
-    public ArrayList<Task> getHistory() {
-        return new ArrayList<>(nodesOfTasks);
+    public List<Task> getHistory() {
+        return getTasks();
     }
 }

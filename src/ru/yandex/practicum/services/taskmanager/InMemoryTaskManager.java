@@ -9,6 +9,7 @@ import ru.yandex.practicum.services.history.HistoryManager;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 public class InMemoryTaskManager implements TaskManager {
     public int defaultId = 0;
@@ -17,10 +18,6 @@ public class InMemoryTaskManager implements TaskManager {
     private final HashMap<Integer, SubTask> subTaskHashMap = new HashMap<>();
     private final HistoryManager historyManager = Managers.getDefaultHistory();
 
-    /**
-     * Комментарий для ревьюера:
-     * перераспределил порядок методов по логической цепочке - добавление, получение, обновление удаление задач
-     */
     @Override
     public void addTask(Task newTask) {
         newTask.setId(++defaultId);
@@ -64,7 +61,7 @@ public class InMemoryTaskManager implements TaskManager {
     public Task getTaskById(int id) {
         // добавить task в список истории просмотра history
         if (taskHashMap.get(id) != null) {
-            historyManager.addHistory(taskHashMap.get(id));
+            historyManager.add(taskHashMap.get(id));
         }
         return taskHashMap.get(id);
     }
@@ -73,7 +70,7 @@ public class InMemoryTaskManager implements TaskManager {
     public Epic getEpicById(int id) {
         // добавить epic в список истории просмотра history
         if (epicHashMap.get(id) != null) {
-            historyManager.addHistory(epicHashMap.get(id));
+            historyManager.add(epicHashMap.get(id));
         }
         return epicHashMap.get(id);
     }
@@ -82,7 +79,7 @@ public class InMemoryTaskManager implements TaskManager {
     public SubTask getSubTaskById(int id) {
         // добавить subTask в список истории просмотра history
         if (subTaskHashMap.get(id) != null) {
-            historyManager.addHistory(subTaskHashMap.get(id));
+            historyManager.add(subTaskHashMap.get(id));
         }
         return subTaskHashMap.get(id);
     }
@@ -223,7 +220,7 @@ public class InMemoryTaskManager implements TaskManager {
     }
 
     @Override
-    public ArrayList<Task> getHistory() {
+    public List<Task> getHistory() {
         return historyManager.getHistory();
     }
 }

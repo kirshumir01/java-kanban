@@ -2,11 +2,12 @@ package ru.yandex.practicum.services.history;
 
 import ru.yandex.practicum.models.Task;
 
-import java.util.ArrayList;
+import java.util.List;
 
 public interface HistoryManager {
-    ArrayList<Task> getHistory();
-    void addHistory(Task task);
+
+    List<Task> getHistory();
+    void add(Task task);
     // определить метод для удаления задачи из история просмотра
     void remove (int id);
 }

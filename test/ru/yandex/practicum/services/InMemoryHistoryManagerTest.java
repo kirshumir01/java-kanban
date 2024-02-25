@@ -10,8 +10,6 @@ import ru.yandex.practicum.services.history.InMemoryHistoryManager;
 import ru.yandex.practicum.services.taskmanager.InMemoryTaskManager;
 import ru.yandex.practicum.services.taskmanager.TaskManager;
 
-import java.util.ArrayList;
-
 import static org.junit.jupiter.api.Assertions.*;
 
 public class InMemoryHistoryManagerTest {
@@ -20,8 +18,8 @@ public class InMemoryHistoryManagerTest {
 
     @BeforeEach
     public void beforeEach() {
-        taskManager = new InMemoryTaskManager();
-        historyManager = new InMemoryHistoryManager();
+        taskManager = Managers.getDefault();
+        historyManager = Managers.getDefaultHistory();
     }
 
     @Test

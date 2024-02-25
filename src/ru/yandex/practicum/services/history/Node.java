@@ -12,8 +12,4 @@ public class Node<T> {
         this.data = data;
         this.next = next;
     }
-
-    public Task getData() {
-        return (Task) this.data;
-    }
 }

@@ -4,6 +4,7 @@ import ru.yandex.practicum.models.Epic;
 import ru.yandex.practicum.models.SubTask;
 import ru.yandex.practicum.models.Task;
 
+import java.util.List;
 import java.util.ArrayList;
 
 public interface TaskManager {
@@ -48,5 +49,5 @@ public interface TaskManager {
 
     void removeSubTaskById(int id);
 
-    ArrayList<Task> getHistory();
+    List<Task> getHistory();
 }
