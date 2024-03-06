@@ -1,4 +1,4 @@
-package ru.yandex.practicum.model;
+package ru.yandex.practicum.models;
 
 import java.util.Objects;
 
@@ -13,29 +13,6 @@ public class Task {
         this.title = title;
         this.description = description;
         this.status = TaskStatus.NEW;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        Task task = (Task) o;
-        return Objects.equals(title, task.title) && Objects.equals(description, task.description) &&
-                Objects.equals(id, task.id) && status == task.status;
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(title, description, id, status);
-    }
-
-    @Override
-    public String toString() {
-        return "Task{" +
-                "title='" + title + '\'' +
-                ", description='" + description + '\'' +
-                ", id='" + id + '\'' +
-                ", status='" + status + '}' + '\'';
     }
 
     public String getTitle() {
@@ -68,5 +45,28 @@ public class Task {
 
     public void setStatus(TaskStatus status) {
         this.status = status;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Task task = (Task) o;
+        return Objects.equals(title, task.title) && Objects.equals(description, task.description) &&
+                Objects.equals(id, task.id) && status == task.status;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(title, description, id, status);
+    }
+
+    @Override
+    public String toString() {
+        return "Task{" +
+                "title='" + title + '\'' +
+                ", description='" + description + '\'' +
+                ", id='" + id + '\'' +
+                ", status='" + status + '}' + '\'';
     }
 }

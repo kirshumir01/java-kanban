@@ -1,18 +1,26 @@
-package ru.yandex.practicum.managers;
+package ru.yandex.practicum.services;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import ru.yandex.practicum.model.Epic;
-import ru.yandex.practicum.model.SubTask;
-import ru.yandex.practicum.model.Task;
+import ru.yandex.practicum.models.Epic;
+import ru.yandex.practicum.models.SubTask;
+import ru.yandex.practicum.models.Task;
+import ru.yandex.practicum.services.history.HistoryManager;
+import ru.yandex.practicum.services.taskmanager.TaskManager;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class TaskManagerTest {
-    private final TaskManager taskManager = new InMemoryTaskManager();
-    private final HistoryManager historyManager = new InMemoryHistoryManager();
+public class InMemoryTaskManagerTest {
+    private TaskManager taskManager;
+    private HistoryManager historyManager;
+
+    @BeforeEach
+    public void beforeEach() {
+        taskManager = Managers.getDefault();
+        historyManager = Managers.getDefaultHistory();
+    }
 
     @Test
     void addTask() {
@@ -76,7 +84,6 @@ public class TaskManagerTest {
         assertEquals(subTask, subTasks.get(0), "Подзадачи не совпадают.");
     }
 
-    // проверить, что Epic не может добавить сам в себя в виде подзадачи
     @Test
     void canNotAddSubTaskToNonExistentEpic() {
         Epic epic = new Epic("Epic", "Epic description");
@@ -85,6 +92,7 @@ public class TaskManagerTest {
         taskManager.addSubTask(subTask);
         Epic newEpic = taskManager.getEpicById(subTask.getEpicId());
 
+        // проверить, что Epic не может добавить сам в себя в виде подзадачи
         assertNotNull(newEpic,"Подзадача не может быть записана в несуществующий эпик.");
     }
 
@@ -95,6 +103,7 @@ public class TaskManagerTest {
         epic.setId(2);
         taskManager.updateEpic(epic);
 
+        // проверить, что обновить несуществующий epic невозсожно
         assertNull(taskManager.getEpicById(2), "Обновлен несуществующий эпик.");
     }
 
@@ -106,35 +115,55 @@ public class TaskManagerTest {
         taskManager.addSubTask(subTask);
         taskManager.updateSubTask(subTask);
 
+        // проверить, что обновить subTask несуществующего эпика невозможно
         assertNotNull(taskManager.getSubTaskById(subTask.getId()), "Обновлена несуществующего подзадача эпика.");
     }
 
-    // проверить, что утилитарный класс всегда возвращает проинициализированные и готовые к работе экземпляры менеджеров
     @Test
     void managersShouldNotReturnsNull() {
+        // проверить, что утилитарный класс всегда возвращает проинициализированные
+        // и готовые к работе экземпляры менеджеров
         assertNotNull(taskManager, "Объект класса не возвращаются.");
         assertNotNull(historyManager, "Объект класса не возвращается.");
     }
 
     @Test
-    void getHistory() {
+    void removedSubTasksShouldNotContainsOldId() {
+        Epic epic1 = new Epic("Epic", "Epic description");
+        SubTask subTask2 = new SubTask("Subtask2", "Subtask description", 1);
+        SubTask subTask3 = new SubTask("Subtask3", "Subtask description", 1);
+
+        taskManager.addEpic(epic1);
+        taskManager.addSubTask(subTask2);
+        taskManager.removeSubTaskById(2);
+        taskManager.addSubTask(subTask3);
+
+        // удаляемые подзадачи не должны хранить старые id
+        // внцтри эпика не должны оставаться id неактуальных подзадач
+        assertFalse(epic1.getSubtasksId().contains(subTask2.getId()));
+        assertFalse(subTask2.equals(subTask3));
+    }
+
+    @Test
+    void dataOfTaskShouldNotBeChangedBySetters() {
         Task task = new Task("Task", "Task description");
-        Epic epic = new Epic("Epic", "Epic description");
-        SubTask subTask = new SubTask("Subtask", "Subtask description", 2);
 
         taskManager.addTask(task);
-        taskManager.addEpic(epic);
-        taskManager.addSubTask(subTask);
 
-        taskManager.getTaskById(task.getId());
-        taskManager.getEpicById(epic.getId());
-        taskManager.getSubTaskById(subTask.getId());
+        int taskId = task.getId();
+        task.setId(2);
+        int newTaskId = task.getId();
 
-        ArrayList<Task> history = taskManager.getHistory();
+        String taskDescription = "Task description";
+        task.setDescription("Changed task description");
+        String newTaskDescription = "Task description";
 
-        assertEquals(3, history.size(), "Список истории пуст или некорректно записан.");
-        assertEquals(1, history.get(0).getId(), "Task не добавлен в историю.");
-        assertEquals(2, history.get(1).getId(), "Epic не добавлен в историю.");
-        assertEquals(3, history.get(2).getId(), "SubTask не добавлен в историю.");
+        taskManager.getTaskById(1);
+        taskManager.getTaskById(2);
+
+        assertEquals(2, task.getId(), "id задачи не изменился.");
+        assertEquals("Changed task description", task.getDescription(), "Описание задачи не изменилось.");
+        assertEquals(null, taskManager.getTaskById(2), "id задачи изменился на пользовательский.");
+        assertEquals(1, taskManager.getHistory().size(), "В истории просмотра отображается 2 задачи.");
     }
 }
