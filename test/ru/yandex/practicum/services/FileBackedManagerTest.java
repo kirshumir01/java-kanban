@@ -1,21 +1,17 @@
 package ru.yandex.practicum.services;
 
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import ru.yandex.practicum.models.Epic;
 import ru.yandex.practicum.models.SubTask;
 import ru.yandex.practicum.models.Task;
-import ru.yandex.practicum.services.history.HistoryManager;
-import ru.yandex.practicum.services.taskmanager.TaskManager;
 
 import java.io.IOException;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class InMemoryTaskManagerTest {
-    public TaskManager taskManager;
-    public HistoryManager historyManager;
+public class FileBackedManagerTest extends InMemoryTaskManagerTest {
 
     @BeforeEach
     public void beforeEach() throws IOException {

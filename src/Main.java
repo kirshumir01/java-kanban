@@ -1,13 +1,16 @@
 import ru.yandex.practicum.services.Managers;
+import ru.yandex.practicum.services.filemanager.FileBackedTaskManager;
 import ru.yandex.practicum.services.taskmanager.TaskManager;
 import ru.yandex.practicum.models.Epic;
 import ru.yandex.practicum.models.SubTask;
 import ru.yandex.practicum.models.Task;
 
+import java.io.File;
+
 public class Main {
 
     public static void main(String[] args) {
-        System.out.println("Поехали!");
+        // System.out.println("Поехали!");
 
         TaskManager taskManager = Managers.getDefault();
 
@@ -32,45 +35,30 @@ public class Main {
         taskManager.addSubTask(subTask6);
         taskManager.addSubTask(subTask7);
 
+        taskManager.getTaskById(1);
+        taskManager.getTaskById(2);
+        taskManager.getTaskById(1);
+        taskManager.getTaskById(2);
+
+        taskManager.getEpicById(4);
+        taskManager.getEpicById(3);
+        taskManager.getEpicById(4);
+        taskManager.getEpicById(3);
+
+        taskManager.getSubTaskById(5);
+        taskManager.getSubTaskById(7);
+        taskManager.getSubTaskById(6);
+        taskManager.getSubTaskById(6);
+        taskManager.getSubTaskById(5);
+        taskManager.getSubTaskById(7);
+
         printAllTasks(taskManager);
     }
 
     // дополнительная реализация технического задания
     private static void printAllTasks(TaskManager manager) {
-        manager.getTaskById(1);
-        manager.getTaskById(2);
-        manager.getTaskById(1);
-        manager.getTaskById(2);
-
-        manager.getEpicById(4);
-        manager.getEpicById(3);
-        manager.getEpicById(4);
-        manager.getEpicById(3);
-
-        manager.getSubTaskById(5);
-        manager.getSubTaskById(7);
-        manager.getSubTaskById(6);
-        manager.getSubTaskById(6);
-        manager.getSubTaskById(5);
-        manager.getSubTaskById(7);
 
         System.out.println("\nИстория просмотров:");
-        for (int i = 0; i < manager.getHistory().size(); i++) {
-            System.out.println((i + 1) + ". " + manager.getHistory().get(i));
-        }
-
-        System.out.println("\nУдаление задачи с id = 1");
-        manager.removeTaskById(1);
-
-        System.out.println("\nИстория просмотров после удаления задачи с id = 1:");
-        for (int i = 0; i < manager.getHistory().size(); i++) {
-            System.out.println((i + 1) + ". " + manager.getHistory().get(i));
-        }
-
-        System.out.println("\nУдаление эпика с id = 3, в котором сохранены 3 подзадачи");
-        manager.removeEpicById(3);
-
-        System.out.println("\nИстория просмотров после удаления эпика с id = 3:");
         for (int i = 0; i < manager.getHistory().size(); i++) {
             System.out.println((i + 1) + ". " + manager.getHistory().get(i));
         }
