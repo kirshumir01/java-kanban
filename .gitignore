@@ -2,8 +2,4 @@
 /.idea/
 README.md
 java-kanban.iml
-*.DS_Store
-*.class
-*.log
-*.xml
-*.iml
+.DS_Store
