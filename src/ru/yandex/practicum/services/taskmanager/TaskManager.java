@@ -27,7 +27,7 @@ public interface TaskManager {
 
     SubTask getSubTaskById(int id);
 
-    ArrayList<SubTask> getListOfSubTasksByEpic (int id);
+    ArrayList<SubTask> getListOfSubTasksByEpic(int id);
 
     void updateTask(Task newTask);
 
