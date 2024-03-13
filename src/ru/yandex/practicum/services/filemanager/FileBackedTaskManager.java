@@ -9,6 +9,7 @@ import java.util.List;
 
 public class FileBackedTaskManager extends InMemoryTaskManager {
     protected File file;
+
     public FileBackedTaskManager(File file) {
         this.file = file;
     }
@@ -52,7 +53,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         }
     }
 
-    public static FileBackedTaskManager loadFromFile (File file) {
+    public static FileBackedTaskManager loadFromFile(File file) {
         FileBackedTaskManager fileManager = new FileBackedTaskManager(file);
 
         try (Reader reader = new FileReader(file); BufferedReader br = new BufferedReader(reader)) {
