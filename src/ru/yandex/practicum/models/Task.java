@@ -8,7 +8,6 @@ public class Task {
     protected Integer id;
     protected TaskStatus status;
 
-    // в конструкторе учесть, что новой задаче по-умолчанию присваивается статус NEW
     public Task(String title, String description) {
         this.title = title;
         this.description = description;
