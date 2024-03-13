@@ -36,6 +36,7 @@ public class InMemoryTaskManager implements TaskManager {
         subTaskIdList.add(newSubTask.getId());
         checkEpicStatus(epicId);
     }
+
     @Override
     public ArrayList<Task> getListOfTasks() {
         return new ArrayList<>(taskHashMap.values());
