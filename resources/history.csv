@@ -1,7 +1,5 @@
 id,type,name,status,description,epic
-2,TASK,Спринт 7,NEW,Изучить теорию
-3,EPIC,ТЗ №6,NEW,Решить задачу
-6,SUBTASK,Шаг №2,NEW,Отправить решение на проверку,3
-7,SUBTASK,Шаг №3,NEW,Внести правки в код,3
+1,TASK,Task,NEW,Task description
+2,EPIC,Epic,NEW,Epic description
+3,SUBTASK,SubTask,NEW,SubTask description,2
 
-2,3,6,7,
