@@ -7,8 +7,7 @@ import java.util.List;
 public interface HistoryManager {
 
     List<Task> getHistory();
-
     void add(Task task);
-
-    void remove(int id);
+    // определить метод для удаления задачи из история просмотра
+    void remove (int id);
 }

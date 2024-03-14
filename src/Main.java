@@ -7,6 +7,8 @@ import ru.yandex.practicum.models.Task;
 public class Main {
 
     public static void main(String[] args) {
+        System.out.println("Поехали!");
+
         TaskManager taskManager = Managers.getDefault();
 
         Task task1 = new Task("Спринт 6", "Изучить теорию");
@@ -30,39 +32,45 @@ public class Main {
         taskManager.addSubTask(subTask6);
         taskManager.addSubTask(subTask7);
 
-        taskManager.getTaskById(1);
-        taskManager.getTaskById(2);
-        taskManager.getTaskById(1);
-        taskManager.getTaskById(2);
-
-        taskManager.getEpicById(4);
-        taskManager.getEpicById(3);
-        taskManager.getEpicById(4);
-        taskManager.getEpicById(3);
-
-        taskManager.getSubTaskById(5);
-        taskManager.getSubTaskById(7);
-        taskManager.getSubTaskById(6);
-        taskManager.getSubTaskById(6);
-        taskManager.getSubTaskById(5);
-        taskManager.getSubTaskById(7);
-
         printAllTasks(taskManager);
     }
 
+    // дополнительная реализация технического задания
     private static void printAllTasks(TaskManager manager) {
+        manager.getTaskById(1);
+        manager.getTaskById(2);
+        manager.getTaskById(1);
+        manager.getTaskById(2);
+
+        manager.getEpicById(4);
+        manager.getEpicById(3);
+        manager.getEpicById(4);
+        manager.getEpicById(3);
+
+        manager.getSubTaskById(5);
+        manager.getSubTaskById(7);
+        manager.getSubTaskById(6);
+        manager.getSubTaskById(6);
+        manager.getSubTaskById(5);
+        manager.getSubTaskById(7);
+
         System.out.println("\nИстория просмотров:");
         for (int i = 0; i < manager.getHistory().size(); i++) {
             System.out.println((i + 1) + ". " + manager.getHistory().get(i));
         }
 
+        System.out.println("\nУдаление задачи с id = 1");
         manager.removeTaskById(1);
-        manager.removeEpicById(4);
-        manager.removeSubTaskById(5);
 
-        // проверить историю после удаления task/epic/subtask
-        // в файле history.csv должны сохранится id в следующей последовательности: 2,3,6,7
-        System.out.println("\nОбновленная история просмотров:");
+        System.out.println("\nИстория просмотров после удаления задачи с id = 1:");
+        for (int i = 0; i < manager.getHistory().size(); i++) {
+            System.out.println((i + 1) + ". " + manager.getHistory().get(i));
+        }
+
+        System.out.println("\nУдаление эпика с id = 3, в котором сохранены 3 подзадачи");
+        manager.removeEpicById(3);
+
+        System.out.println("\nИстория просмотров после удаления эпика с id = 3:");
         for (int i = 0; i < manager.getHistory().size(); i++) {
             System.out.println((i + 1) + ". " + manager.getHistory().get(i));
         }

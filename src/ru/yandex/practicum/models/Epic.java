@@ -4,25 +4,14 @@ import java.util.ArrayList;
 import java.util.Objects;
 
 public class Epic extends Task {
-    private ArrayList<Integer> subTaskIdList = new ArrayList<>();
-
-    private TaskType type;
+    private final ArrayList<Integer> subTaskIdList = new ArrayList<>();
 
     public Epic(String title, String description) {
         super(title, description);
-        this.type = TaskType.EPIC;
     }
 
     public ArrayList<Integer> getSubtasksId() {
         return subTaskIdList;
-    }
-
-    public void setSubTaskIdList(ArrayList<Integer> subTaskIdList) {
-        this.subTaskIdList = subTaskIdList;
-    }
-
-    public TaskType getType() {
-        return type;
     }
 
     @Override

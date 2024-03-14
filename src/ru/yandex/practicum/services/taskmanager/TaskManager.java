@@ -13,7 +13,7 @@ public interface TaskManager {
 
     void addEpic(Epic newEpic);
 
-    void addSubTask(SubTask newSubTask);
+    void addSubTask (SubTask newSubTask);
 
     ArrayList<Task> getListOfTasks();
 
@@ -23,13 +23,13 @@ public interface TaskManager {
 
     Task getTaskById(int id);
 
-    Epic getEpicById(int id);
+    Epic getEpicById (int id);
 
-    SubTask getSubTaskById(int id);
+    SubTask getSubTaskById (int id);
 
-    ArrayList<SubTask> getListOfSubTasksByEpic(int id);
+    ArrayList<SubTask> getListOfSubTasksByEpic (int id);
 
-    void updateTask(Task newTask);
+    void updateTask (Task newTask);
 
     void updateEpic(Epic newEpic);
 

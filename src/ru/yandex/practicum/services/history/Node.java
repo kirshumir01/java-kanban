@@ -1,5 +1,7 @@
 package ru.yandex.practicum.services.history;
 
+import ru.yandex.practicum.models.Task;
+
 public class Node<T> {
     public T data;
     public Node<T> next;
