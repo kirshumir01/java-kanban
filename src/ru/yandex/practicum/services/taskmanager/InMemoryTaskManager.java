@@ -189,11 +189,8 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public void removeSubTaskById(int id) {
-        // получить идентификатор эпика, чтобы после удаления подзадач обновить его статус
         int epicId = subTaskHashMap.get(id).getEpicId();
-        // удалить идентификаторы подзадач из эпика
         ArrayList<Integer> subTasksId = epicHashMap.get(epicId).getSubtasksId();
-        // удалить subTask из истории просмотров
         historyManager.remove(id);
         subTasksId.remove((Integer) id);
         // fix: записать в epic новый список subTasksId
@@ -201,7 +198,6 @@ public class InMemoryTaskManager implements TaskManager {
         epic.setSubTaskIdList(subTasksId);
         // fix: удалить subTask из subTaskHashMap
         subTaskHashMap.remove(id);
-        // проверить статус эпика
         checkEpicStatus(epicId);
     }
 
