@@ -7,8 +7,6 @@ import ru.yandex.practicum.models.Task;
 public class Main {
 
     public static void main(String[] args) {
-        // System.out.println("Поехали!");
-
         TaskManager taskManager = Managers.getDefault();
 
         Task task1 = new Task("Спринт 6", "Изучить теорию");
@@ -52,10 +50,19 @@ public class Main {
         printAllTasks(taskManager);
     }
 
-    // дополнительная реализация технического задания
     private static void printAllTasks(TaskManager manager) {
-
         System.out.println("\nИстория просмотров:");
+        for (int i = 0; i < manager.getHistory().size(); i++) {
+            System.out.println((i + 1) + ". " + manager.getHistory().get(i));
+        }
+
+        manager.removeTaskById(1);
+        manager.removeEpicById(4);
+        manager.removeSubTaskById(5);
+
+        // проверить историю после удаления task/epic/subtask
+        // в файле history.csv должны сохранится id в следующей последовательности: 2,3,6,7
+        System.out.println("\nОбновленная история просмотров:");
         for (int i = 0; i < manager.getHistory().size(); i++) {
             System.out.println((i + 1) + ". " + manager.getHistory().get(i));
         }

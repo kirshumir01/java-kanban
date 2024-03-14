@@ -196,6 +196,11 @@ public class InMemoryTaskManager implements TaskManager {
         // удалить subTask из истории просмотров
         historyManager.remove(id);
         subTasksId.remove((Integer) id);
+        // fix: записать в epic новый список subTasksId
+        Epic epic = epicHashMap.get(epicId);
+        epic.setSubTaskIdList(subTasksId);
+        // fix: удалить subTask из subTaskHashMap
+        subTaskHashMap.remove(id);
         // проверить статус эпика
         checkEpicStatus(epicId);
     }

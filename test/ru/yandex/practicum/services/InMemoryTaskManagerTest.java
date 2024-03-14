@@ -6,9 +6,9 @@ import ru.yandex.practicum.models.Epic;
 import ru.yandex.practicum.models.SubTask;
 import ru.yandex.practicum.models.Task;
 import ru.yandex.practicum.services.history.HistoryManager;
+import ru.yandex.practicum.services.taskmanager.InMemoryTaskManager;
 import ru.yandex.practicum.services.taskmanager.TaskManager;
 
-import java.io.IOException;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -18,8 +18,8 @@ public class InMemoryTaskManagerTest {
     public HistoryManager historyManager;
 
     @BeforeEach
-    public void beforeEach() throws IOException {
-        taskManager = Managers.getDefault();
+    public void beforeEach() {
+        taskManager = new InMemoryTaskManager();
         historyManager = Managers.getDefaultHistory();
     }
 

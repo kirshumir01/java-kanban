@@ -1,5 +1,29 @@
-/out/
-/.idea/
-README.md
+#directories
+out/
+.idea/
+lib/
+
+# class files
+*.class
+
+# config files
+*.xml
+*.iml
 java-kanban.iml
+
+
+# log files
+*.log
 .DS_Store
+
+# mobile Tools for Java (J2ME)
+.mtj.tmp/
+
+# package files
+*.jar
+
+# IntelliJ IDEA
+.idea
+
+# other files
+README.md

@@ -13,9 +13,9 @@ public class CSVTaskFormatter {
     public static String toString(Task task) {
         String type;
 
-        if (task instanceof SubTask) {
+        if (task.getType().toString().equals("SUBTASK")) {
             type = TaskType.SUBTASK.toString();
-        } else if (task instanceof Epic) {
+        } else if (task.getType().toString().equals("EPIC")) {
             type = TaskType.EPIC.toString();
         } else {
             type = TaskType.TASK.toString();
@@ -28,7 +28,7 @@ public class CSVTaskFormatter {
 
         // конвертировать subtask в строку в формате:
         // id,type,name,status,description,epic
-        if (task.getClass() == SubTask.class) {
+        if (task.getType().toString().equals("SUBTASK")) {
             line = line + "," + ((SubTask) task).getEpicId();
         }
         return line;

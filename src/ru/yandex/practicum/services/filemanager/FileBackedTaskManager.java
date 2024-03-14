@@ -24,28 +24,27 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         System.out.println(fileManager.getListOfSubTasks() + "\n");
 
         System.out.println("Список задач из HistoryManager просмотров:");
-        System.out.println(fileManager.getHistory() + "\n");
+        for (Task task : fileManager.getHistory()) {
+            System.out.println(task.toString() + "\n");
+        }
     }
 
     public void save() {
         try (Writer writer = new FileWriter(file)) {
             writer.write("id,type,name,status,description,epic\n");
 
-            if (!taskHashMap.isEmpty()) {
-                for (Task task : taskHashMap.values()) {
-                    writer.write(CSVTaskFormatter.toString(task) + "\n");
-                }
+            for (Task task : taskHashMap.values()) {
+                writer.write(CSVTaskFormatter.toString(task) + "\n");
             }
-            if (!epicHashMap.isEmpty()) {
-                for (Epic epic : epicHashMap.values()) {
-                    writer.write(CSVTaskFormatter.toString(epic) + "\n");
-                }
+
+            for (Epic epic : epicHashMap.values()) {
+                writer.write(CSVTaskFormatter.toString(epic) + "\n");
             }
-            if (!subTaskHashMap.isEmpty()) {
-                for (SubTask subTask : subTaskHashMap.values()) {
-                    writer.write(CSVTaskFormatter.toString(subTask) + "\n");
-                }
+
+            for (SubTask subTask : subTaskHashMap.values()) {
+                writer.write(CSVTaskFormatter.toString(subTask) + "\n");
             }
+
             writer.write("\n");
             writer.write(CSVTaskFormatter.historyToString(historyManager));
         } catch (IOException e) {
@@ -57,15 +56,17 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         FileBackedTaskManager fileManager = new FileBackedTaskManager(file);
 
         try (Reader reader = new FileReader(file); BufferedReader br = new BufferedReader(reader)) {
+            int currentId = 0;
+
             br.readLine();
 
             while (br.ready()) {
                 String line = br.readLine();
                 if (!line.isEmpty()) {
                     Task task = CSVTaskFormatter.fromString(line);
-                    if (task instanceof Epic) {
+                    if (task.getType().toString().equals("EPIC")) {
                         fileManager.epicHashMap.put(task.getId(), (Epic) task);
-                    } else if (task instanceof SubTask) {
+                    } else if (task.getType().toString().equals("SUBTASK")) {
                         fileManager.subTaskHashMap.put(task.getId(), (SubTask) task);
                         // получить epic подзадачи и записать id подзадачи в epic
                         Epic epic = fileManager.epicHashMap.get(((SubTask) task).getEpicId());
@@ -73,6 +74,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
                     } else {
                         fileManager.taskHashMap.put(task.getId(), task);
                     }
+                    currentId = task.getId();
                 }
 
                 // если строка пустая - далее считать id просмотренных task
@@ -91,12 +93,18 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
                     }
                 }
             }
+            // присвоить defaultId значение id из файла
+            fileManager.setDefaultId(currentId);
         } catch (FileNotFoundException e) {
             throw new ManagerSaveException("Файл не найден.");
         } catch (IOException e) {
             throw new ManagerSaveException("Ошибка чтения данных из файла.");
         }
         return fileManager;
+    }
+
+    private void setDefaultId (int id) {
+        this.defaultId = id;
     }
 
     @Override
