@@ -103,7 +103,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         return fileManager;
     }
 
-    private void setDefaultId (int id) {
+    private void setDefaultId(int id) {
         this.defaultId = id;
     }
 
