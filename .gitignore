@@ -1,6 +1,7 @@
 # directories
 .idea/
 lib/
+out/
 
 # class files
 *.class
@@ -14,12 +15,14 @@ java-kanban.iml
 # log files
 *.log
 .DS_Store
+DS_Store
 
 # mobile Tools for Java (J2ME)
 .mtj.tmp/
 
 # package files
 *.jar
+*.java
 
 # IntelliJ IDEA
 .idea
