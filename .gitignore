@@ -22,7 +22,6 @@ DS_Store
 
 # package files
 *.jar
-*.java
 
 # IntelliJ IDEA
 .idea
