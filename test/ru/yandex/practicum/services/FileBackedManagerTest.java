@@ -12,6 +12,8 @@ import ru.yandex.practicum.services.history.HistoryManager;
 import ru.yandex.practicum.services.taskmanager.TaskManager;
 
 import java.io.*;
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 
 public class FileBackedManagerTest {
@@ -29,9 +31,11 @@ public class FileBackedManagerTest {
 
     @Test
     public void readHistoryFromEmptyFileTest() {
-        Task task = new Task("Task", "Task description");
+        Task task = new Task("Task", "Task description", LocalDateTime.of(2024, 01, 01, 00, 00),
+                Duration.ofMinutes(15));
         Epic epic = new Epic("Epic", "Epic description");
-        SubTask subTask = new SubTask("Subtask", "Subtask description", 2);
+        SubTask subTask = new SubTask("Subtask", "Subtask description", 2, LocalDateTime.of(2024, 01, 01, 01, 00),
+                Duration.ofMinutes(15));
 
         taskManager.addTask(task);
         taskManager.addEpic(epic);
@@ -43,11 +47,11 @@ public class FileBackedManagerTest {
         Assertions.assertTrue(fromFileManager.getHistory().isEmpty());
         Assertions.assertEquals(taskManager.getHistory(), fromFileManager.getHistory(),
                 "Содержимое истории не соответствует.");
-        Assertions.assertEquals(taskManager.getTaskById(1).toString(), fromFileManager.getTaskById(1).toString(),
+        Assertions.assertEquals(taskManager.getTaskById(1), fromFileManager.getTaskById(1),
                 "Содержимое task не соответствует.");
-        Assertions.assertEquals(taskManager.getEpicById(2).toString(), fromFileManager.getEpicById(2).toString(),
+        Assertions.assertEquals(taskManager.getEpicById(2), fromFileManager.getEpicById(2),
                 "Содержимое epic не соответствует.");
-        Assertions.assertEquals(taskManager.getSubTaskById(3).toString(), fromFileManager.getSubTaskById(3).toString(),
+        Assertions.assertEquals(taskManager.getSubTaskById(3), fromFileManager.getSubTaskById(3),
                 "Содержимое epic не соответствует.");
     }
 
@@ -107,6 +111,7 @@ public class FileBackedManagerTest {
                 "SubTask'и не соответствуют.");
     }
 
+    /*
     @AfterEach
     public void clearTestCSVFile() {
         try (FileWriter writer = new FileWriter(file)) {
@@ -115,4 +120,6 @@ public class FileBackedManagerTest {
             e.printStackTrace();
         }
     }
+
+     */
 }

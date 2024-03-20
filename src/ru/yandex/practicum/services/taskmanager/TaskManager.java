@@ -6,8 +6,13 @@ import ru.yandex.practicum.models.Task;
 
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Set;
 
 public interface TaskManager {
+
+    Set<Task> getPrioritizedTasks();
+
+    boolean isCrossingTasks(Task task);
 
     void addTask(Task newTask);
 
