@@ -7,7 +7,6 @@ import java.util.Map;
 import java.util.HashMap;
 
 public class InMemoryHistoryManager implements HistoryManager {
-    // создать хэш-таблицу: ключ - id Task, значение - узел связного списка, который хранит ссылку на Task
     protected Map<Integer, Node> nodesByTaskIdMap = new HashMap<Integer, Node>();
     private Node<Task> first;
     private Node<Task> last;
@@ -41,7 +40,6 @@ public class InMemoryHistoryManager implements HistoryManager {
         Node<Task> prev = node.prev;
         Node<Task> next = node.next;
 
-        // обнулить узлы
         if (size == 1) {
             first = null;
             node.data = null;
@@ -68,6 +66,7 @@ public class InMemoryHistoryManager implements HistoryManager {
         }
     }
 
+    // fix: исправить метод, исключить двойные проверки, дополнить удалением просмотренной task из Map
     @Override
     public void add(Task task) {
         if (nodesByTaskIdMap.isEmpty()) {
@@ -75,25 +74,21 @@ public class InMemoryHistoryManager implements HistoryManager {
             nodesByTaskIdMap.put(task.getId(), last);
         } else {
             if (nodesByTaskIdMap.containsKey(task.getId())) {
-                for (Integer id : nodesByTaskIdMap.keySet()) {
-                    if (id == task.getId()) {
-                        removeNode(nodesByTaskIdMap.get(task.getId()));
-                        linkLast(task);
-                        nodesByTaskIdMap.put(task.getId(), last);
-                    }
-                }
+                remove(task.getId());
+                linkLast(task);
+                nodesByTaskIdMap.put(task.getId(), last);
             } else {
                 linkLast(task);
                 nodesByTaskIdMap.put(task.getId(), last);
             }
         }
-
     }
 
     @Override
     public void remove(int id) {
         if (nodesByTaskIdMap.get(id) != null) {
             removeNode(nodesByTaskIdMap.get(id));
+            nodesByTaskIdMap.remove(id);
         }
     }
 

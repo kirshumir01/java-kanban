@@ -6,6 +6,7 @@ import ru.yandex.practicum.models.Epic;
 import ru.yandex.practicum.models.SubTask;
 import ru.yandex.practicum.models.Task;
 import ru.yandex.practicum.services.history.HistoryManager;
+import ru.yandex.practicum.services.taskmanager.InMemoryTaskManager;
 import ru.yandex.practicum.services.taskmanager.TaskManager;
 
 import java.util.List;
@@ -13,12 +14,12 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class InMemoryTaskManagerTest {
-    private TaskManager taskManager;
-    private HistoryManager historyManager;
+    public TaskManager taskManager;
+    public HistoryManager historyManager;
 
     @BeforeEach
     public void beforeEach() {
-        taskManager = Managers.getDefault();
+        taskManager = new InMemoryTaskManager();
         historyManager = Managers.getDefaultHistory();
     }
 
@@ -139,7 +140,7 @@ public class InMemoryTaskManagerTest {
         taskManager.addSubTask(subTask3);
 
         // удаляемые подзадачи не должны хранить старые id
-        // внцтри эпика не должны оставаться id неактуальных подзадач
+        // внутри эпика не должны оставаться id неактуальных подзадач
         assertFalse(epic1.getSubtasksId().contains(subTask2.getId()));
         assertFalse(subTask2.equals(subTask3));
     }

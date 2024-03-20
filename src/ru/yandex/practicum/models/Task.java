@@ -7,12 +7,13 @@ public class Task {
     protected String description;
     protected Integer id;
     protected TaskStatus status;
+    protected TaskType type;
 
-    // в конструкторе учесть, что новой задаче по-умолчанию присваивается статус NEW
     public Task(String title, String description) {
         this.title = title;
         this.description = description;
         this.status = TaskStatus.NEW;
+        this.type = TaskType.TASK;
     }
 
     public String getTitle() {
@@ -45,6 +46,10 @@ public class Task {
 
     public void setStatus(TaskStatus status) {
         this.status = status;
+    }
+
+    public TaskType getType() {
+        return type;
     }
 
     @Override
