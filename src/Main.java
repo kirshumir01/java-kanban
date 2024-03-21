@@ -4,20 +4,23 @@ import ru.yandex.practicum.models.Epic;
 import ru.yandex.practicum.models.SubTask;
 import ru.yandex.practicum.models.Task;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
+
 public class Main {
 
     public static void main(String[] args) {
         TaskManager taskManager = Managers.getDefault();
 
-        Task task1 = new Task("Спринт 6", "Изучить теорию");
-        Task task2 = new Task("Спринт 7", "Изучить теорию");
+        Task task1 = new Task("Спринт 6", "Изучить теорию", LocalDateTime.of(2024, 03, 15, 10, 15), Duration.ofMinutes(360));
+        Task task2 = new Task("Спринт 7", "Изучить теорию", LocalDateTime.of(2024, 03, 20, 10, 15), Duration.ofMinutes(360));
 
         Epic epic3 = new Epic("ТЗ №6", "Решить задачу");
         Epic epic4 = new Epic("ТЗ №7", "Решить задачу");
 
-        SubTask subTask5 = new SubTask("Шаг №1", "Написать код", 3);
-        SubTask subTask6 = new SubTask("Шаг №2", "Отправить решение на проверку", 3);
-        SubTask subTask7 = new SubTask("Шаг №3", "Внести правки в код", 3);
+        SubTask subTask5 = new SubTask("Шаг №1", "Написать код", 3, LocalDateTime.of(2024, 03, 17, 10, 00), Duration.ofMinutes(360));
+        SubTask subTask6 = new SubTask("Шаг №2", "Отправить решение на проверку", 3, LocalDateTime.of(2024, 03, 17, 18, 00), Duration.ofMinutes(15));
+        SubTask subTask7 = new SubTask("Шаг №3", "Внести правки в код", 3, LocalDateTime.of(2024, 03, 18, 02, 00), Duration.ofMinutes(60));
 
         // проверка работы истории просмотров задач
         taskManager.addTask(task1);
@@ -56,6 +59,8 @@ public class Main {
             System.out.println((i + 1) + ". " + manager.getHistory().get(i));
         }
 
+        System.out.println(manager.getPrioritizedTasks().toString());
+
         manager.removeTaskById(1);
         manager.removeEpicById(4);
         manager.removeSubTaskById(5);
@@ -66,5 +71,6 @@ public class Main {
         for (int i = 0; i < manager.getHistory().size(); i++) {
             System.out.println((i + 1) + ". " + manager.getHistory().get(i));
         }
+        System.out.println(manager.getPrioritizedTasks().toString());
     }
 }

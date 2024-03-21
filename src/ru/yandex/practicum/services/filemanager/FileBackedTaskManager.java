@@ -18,12 +18,12 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         File history = new File("resources/history.csv");
         FileBackedTaskManager fileManager = loadFromFile(history);
 
-        System.out.println("Список задач из TaskManager просмотров:");
+        System.out.println("Список задач из TaskManager:");
         System.out.println(fileManager.getListOfTasks() + "\n");
         System.out.println(fileManager.getListOfEpics() + "\n");
         System.out.println(fileManager.getListOfSubTasks() + "\n");
 
-        System.out.println("Список задач из HistoryManager просмотров:");
+        System.out.println("Список задач из HistoryManager:");
         for (Task task : fileManager.getHistory()) {
             System.out.println(task.toString() + "\n");
         }
@@ -31,7 +31,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
 
     public void save() {
         try (Writer writer = new FileWriter(file)) {
-            writer.write("id,type,name,status,description,epic\n");
+            writer.write("id,type,name,status,description,epic,startTime,duration,endTime\n");
 
             for (Task task : taskHashMap.values()) {
                 writer.write(CSVTaskFormatter.toString(task) + "\n");
@@ -65,12 +65,17 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
                 if (!line.isEmpty()) {
                     Task task = CSVTaskFormatter.fromString(line);
                     if (task.getType().toString().equals("EPIC")) {
+                        // добавить task в sortedTasks
+                        fileManager.sortedTasks.add(task);
                         fileManager.epicHashMap.put(task.getId(), (Epic) task);
                     } else if (task.getType().toString().equals("SUBTASK")) {
+                        // добавить task в sortedTasks
+                        fileManager.sortedTasks.add(task);
                         fileManager.subTaskHashMap.put(task.getId(), (SubTask) task);
                         // получить epic подзадачи и записать id подзадачи в epic
                         Epic epic = fileManager.epicHashMap.get(((SubTask) task).getEpicId());
                         epic.getSubtasksId().add(task.getId());
+                        fileManager.updateEpicTime(epic);
                     } else {
                         fileManager.taskHashMap.put(task.getId(), task);
                     }
@@ -80,7 +85,6 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
                     }
                 }
 
-                // если строка пустая - далее считать id просмотренных task
                 if (line.isBlank()) {
                     line = br.readLine();
                     List<Integer> viewedTaskId = CSVTaskFormatter.historyFromString(line);
@@ -186,6 +190,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
     @Override
     public void removeAllSubTasks() {
         super.removeAllSubTasks();
+        save();
     }
 
     @Override

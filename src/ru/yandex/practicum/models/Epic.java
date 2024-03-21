@@ -1,5 +1,6 @@
 package ru.yandex.practicum.models;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Objects;
 
@@ -7,6 +8,7 @@ public class Epic extends Task {
     private final ArrayList<Integer> subTaskIdList = new ArrayList<>();
 
     private TaskType type;
+    private LocalDateTime endTime;
 
     public Epic(String title, String description) {
         super(title, description);
@@ -19,6 +21,15 @@ public class Epic extends Task {
 
     public TaskType getType() {
         return type;
+    }
+
+    @Override
+    public LocalDateTime getEndTime() {
+        return endTime;
+    }
+
+    public void setEndTime(LocalDateTime endTime) {
+        this.endTime = endTime;
     }
 
     @Override
@@ -41,7 +52,10 @@ public class Epic extends Task {
                 "title='" + title + '\'' +
                 ", description='" + description + '\'' +
                 ", id='" + id + '\'' +
-                ", status='" + status +
-                ", subTasks' ID='" + subTaskIdList + '}' + '\'';
+                ", status='" + status + '\'' +
+                ", subTasks' ID='" + subTaskIdList + '\'' +
+                ", startTime='" + startTime + '\'' +
+                ", endTime='" + endTime + '\'' +
+                ", duration='" + duration + '}' + '\'';
     }
 }
