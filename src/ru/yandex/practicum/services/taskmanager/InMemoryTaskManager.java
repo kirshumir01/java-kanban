@@ -26,7 +26,7 @@ public class InMemoryTaskManager implements TaskManager {
     protected TreeSet<Task> sortedTasks = new TreeSet<>(comparator);
 
     @Override
-    public Set<Task> getPrioritizedTasks() {
+    public TreeSet<Task> getPrioritizedTasks() {
         return sortedTasks;
     }
 
@@ -108,11 +108,13 @@ public class InMemoryTaskManager implements TaskManager {
             sortedTasks.add(newSubTask);
         }
         subTaskHashMap.put(newSubTask.getId(), newSubTask);
-        int epicId = newSubTask.getEpicId();
-        ArrayList<Integer> subTaskIdList = epicHashMap.get(epicId).getSubtasksId();
-        subTaskIdList.add(newSubTask.getId());
-        checkEpicStatus(epicId);
-        updateEpicTime(epicHashMap.get(epicId));
+
+        if (epicHashMap.get(newSubTask.getEpicId()) != null) {
+            ArrayList<Integer> subTaskIdList = epicHashMap.get(newSubTask.getEpicId()).getSubtasksId();
+            subTaskIdList.add(newSubTask.getId());
+            checkEpicStatus(newSubTask.getEpicId());
+            updateEpicTime(epicHashMap.get(newSubTask.getEpicId()));
+        }
     }
 
     @Override
@@ -127,7 +129,7 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public ArrayList<SubTask> getListOfSubTasks() {
-        return new ArrayList<>(subTaskHashMap.values());
+         return new ArrayList<>(subTaskHashMap.values());
     }
 
     @Override
@@ -169,9 +171,9 @@ public class InMemoryTaskManager implements TaskManager {
             if (isCrossingTasks(newTask)) {
                 newTask.setDuration(null);
                 newTask.setStartTime(null);
-            } else {
-                taskHashMap.put(newTask.getId(), newTask);
             }
+
+            taskHashMap.put(newTask.getId(), newTask);
 
             // создать новый sortedList без старой Task и добавить newTask
             sortedTasks = sortedTasks.stream()
@@ -194,8 +196,13 @@ public class InMemoryTaskManager implements TaskManager {
             if (isCrossingTasks(newSubTask)) {
                 newSubTask.setDuration(null);
                 newSubTask.setStartTime(null);
-            } else {
-                subTaskHashMap.put(newSubTask.getId(), newSubTask);
+            }
+
+            subTaskHashMap.put(newSubTask.getId(), newSubTask);
+
+            if (epicHashMap.get(newSubTask.getEpicId()) != null) {
+                checkEpicStatus(newSubTask.getEpicId());
+                updateEpicTime(epicHashMap.get(newSubTask.getEpicId()));
             }
 
             // создать новый sortedList без старой SubTask и добавить newSubTask
@@ -203,10 +210,6 @@ public class InMemoryTaskManager implements TaskManager {
                     .filter(t -> t.getId() != newSubTask.getId())
                     .collect(Collectors.toCollection(() -> new TreeSet<>(comparator)));
             sortedTasks.add(newSubTask);
-
-            checkEpicStatus(newSubTask.getEpicId());
-            // обновить время Epic'а
-            updateEpicTime(epicHashMap.get(newSubTask.getEpicId()));
         }
     }
 
@@ -270,7 +273,6 @@ public class InMemoryTaskManager implements TaskManager {
                 .stream()
                 .forEach(epic -> {
                     epic.getSubtasksId()
-                            .stream()
                             .forEach(id -> {
                                 historyManager.remove(id);
                                 sortedTasks.remove(subTaskHashMap.get(id));
@@ -325,5 +327,10 @@ public class InMemoryTaskManager implements TaskManager {
     @Override
     public List<Task> getHistory() {
         return historyManager.getHistory();
+    }
+
+    @Override
+    public HistoryManager getHistoryManager() {
+        return historyManager;
     }
 }

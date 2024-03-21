@@ -1,32 +1,29 @@
 package ru.yandex.practicum.services;
 
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import ru.yandex.practicum.models.Epic;
 import ru.yandex.practicum.models.SubTask;
 import ru.yandex.practicum.models.Task;
+import ru.yandex.practicum.services.exceptions.ManagerSaveException;
 import ru.yandex.practicum.services.filemanager.FileBackedTaskManager;
-import ru.yandex.practicum.services.history.HistoryManager;
-import ru.yandex.practicum.services.taskmanager.TaskManager;
 
 import java.io.*;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 
-public class FileBackedManagerTest {
+import static org.junit.jupiter.api.Assertions.assertThrows;
+
+class FileBackedTaskManagerTest extends TaskManagerTest<FileBackedTaskManager> {
 
     private File file = new File("resources/test.csv");
-
-    public TaskManager taskManager;
-    public HistoryManager historyManager;
 
     @BeforeEach
     public void beforeEach() {
         taskManager = new FileBackedTaskManager(file);
-        historyManager = Managers.getDefaultHistory();
     }
 
     @Test
@@ -110,8 +107,22 @@ public class FileBackedManagerTest {
         Assertions.assertEquals(taskManager.getListOfSubTasks(), fromFileManager.getListOfSubTasks(),
                 "SubTask'и не соответствуют.");
     }
+    @Test
+    public void readingFromNonExistentFileThrowingException() {
+        assertThrows(ManagerSaveException.class, () ->
+                FileBackedTaskManager.loadFromFile(new File("resources/file.csv")),
+                "Чтение из несуществующего файла не должно осуществляться.");
+    }
 
-    /*
+    @Test
+    public void savingInFileWithWrongPathThrowingException() {
+        FileBackedTaskManager invalidManager = new FileBackedTaskManager(new File("sources/test.csv"));
+        Task task = new Task("Task", "Test description");
+
+        assertThrows(ManagerSaveException.class, () -> invalidManager.addTask(task),
+                "Сохранение в файл с некорректным адресом не должно осуществляться.");
+    }
+
     @AfterEach
     public void clearTestCSVFile() {
         try (FileWriter writer = new FileWriter(file)) {
@@ -120,6 +131,4 @@ public class FileBackedManagerTest {
             e.printStackTrace();
         }
     }
-
-     */
 }

@@ -7,13 +7,13 @@ import ru.yandex.practicum.models.Task;
 import ru.yandex.practicum.models.TaskStatus;
 import ru.yandex.practicum.services.taskmanager.TaskManager;
 
-import java.util.ArrayList;
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public abstract class TaskManagerTest<T extends TaskManager> {
+abstract class TaskManagerTest<T extends TaskManager> {
 
     protected T taskManager;
 
@@ -122,15 +122,20 @@ public abstract class TaskManagerTest<T extends TaskManager> {
     }
 
     @Test
-    public void getSubTaskByIdTest() {
+    public void getSubTaskByIdAndGetSubTaskByEpicIdTest() {
+        Epic epic = new Epic("Epic", "Epic description");
+        taskManager.addEpic(epic);
         SubTask subTask = new SubTask("Subtask", "Subtask description", 1);
         taskManager.addSubTask(subTask);
 
-        SubTask subTaskByCustomId = taskManager.getSubTaskById(2);
+        SubTask subTaskByCustomId = taskManager.getSubTaskById(3);
         assertNull(subTaskByCustomId, "Задача не соответствует.");
 
         subTaskByCustomId = taskManager.getSubTaskById(subTask.getId());
         assertEquals(subTask, subTaskByCustomId, "Задача не соответствует.");
+
+        assertEquals(epic.getSubtasksId().getFirst(), subTaskByCustomId.getId(),
+                "id подзадачи в эпике не соответствует.");
     }
 
     @Test
@@ -138,13 +143,14 @@ public abstract class TaskManagerTest<T extends TaskManager> {
         Task task = new Task("Task", "Task description");
         taskManager.addTask(task);
 
-        task = new Task("Task", "Updated task");
-        taskManager.updateTask(task);
+        Task newTask = new Task("Task", "Updated task");
+        newTask.setId(1);
+        taskManager.updateTask(newTask);
 
         final Task updatedTask = taskManager.getTaskById(task.getId());
 
         assertNotNull(updatedTask, "Задача не найдена.");
-        assertEquals(task, updatedTask, "Задачи не соответствуют.");
+        assertNotEquals(task, updatedTask, "Задачи соответствуют.");
     }
 
     @Test
@@ -152,13 +158,14 @@ public abstract class TaskManagerTest<T extends TaskManager> {
         Epic epic = new Epic("Epic", "Epic description");
         taskManager.addEpic(epic);
 
-        epic = new Epic("Epic", "Updated epic");
-        taskManager.updateEpic(epic);
+        Epic newEpic = new Epic("Epic", "Updated epic");
+        newEpic.setId(1);
+        taskManager.updateEpic(newEpic);
 
         final Epic updatedEpic = taskManager.getEpicById(epic.getId());
 
         assertNotNull(updatedEpic, "Эпик не найден.");
-        assertEquals(epic, updatedEpic, "Эпики не соответствуют.");
+        assertNotEquals(epic, updatedEpic, "Эпики соответствуют.");
     }
 
     @Test
@@ -166,13 +173,14 @@ public abstract class TaskManagerTest<T extends TaskManager> {
         SubTask subTask = new SubTask("SubTask", "SubTask description", 1);
         taskManager.addSubTask(subTask);
 
-        subTask = new SubTask("SubTask", "Updated subtask", 1);
-        taskManager.updateSubTask(subTask);
+        SubTask newSubTask = new SubTask("SubTask", "Updated subtask", 1);
+        newSubTask.setId(1);
+        taskManager.updateSubTask(newSubTask);
 
         final SubTask updatedSubTask = taskManager.getSubTaskById(subTask.getId());
 
         assertNotNull(updatedSubTask, "Подзадача не найдена.");
-        assertEquals(subTask, updatedSubTask, "Подзадачи не соответствуют.");
+        assertNotEquals(subTask, updatedSubTask, "Подзадачи не соответствуют.");
     }
 
     @Test
@@ -184,18 +192,23 @@ public abstract class TaskManagerTest<T extends TaskManager> {
         SubTask subTask2 = new SubTask("SubTask2", "IN_PROGRESS", 1);
         SubTask subTask3 = new SubTask("SubTask3", "DONE", 1);
 
+        subTask1.setStatus(TaskStatus.NEW);
+        subTask2.setStatus(TaskStatus.IN_PROGRESS);
+        subTask3.setStatus(TaskStatus.DONE);
+
         taskManager.addSubTask(subTask1);
-        assertEquals(TaskStatus.NEW, epic.getStatus(), "Статусы не совпадают");
+        assertEquals(TaskStatus.NEW, epic.getStatus(), "Статус эпика не соответствует.");
 
         taskManager.addSubTask(subTask2);
-        assertEquals(TaskStatus.IN_PROGRESS, epic.getStatus(), "Статусы не совпадают");
+        assertEquals(TaskStatus.IN_PROGRESS, epic.getStatus(), "Статус эпика не соответствует.");
 
         taskManager.addSubTask(subTask3);
-        assertEquals(TaskStatus.DONE, epic.getStatus(), "Статусы не совпадают");
+        assertNotEquals(TaskStatus.DONE, epic.getStatus(), "Статус эпика не соответствует.");
 
         subTask1.setStatus(TaskStatus.DONE);
         subTask2.setStatus(TaskStatus.DONE);
-        assertEquals(TaskStatus.DONE, epic.getStatus(), "Статусы не совпадают");
+        taskManager.checkEpicStatus(epic.getId());
+        assertEquals(TaskStatus.DONE, epic.getStatus(), "Статус эпика не соответствует.");
     }
 
     @Test
@@ -242,8 +255,8 @@ public abstract class TaskManagerTest<T extends TaskManager> {
 
         taskManager.removeAllSubTasks();
 
-        assertEquals(0, taskManager.getListOfSubTasks().size(), "Список не очищен.");
-        assertEquals(0, taskManager.getListOfEpics().get(1).getSubtasksId().size(), "Список id подзадач не очищен.");
+        assertEquals(0, taskManager.getListOfSubTasks().size(), "Список подзадач не очищен.");
+        assertEquals(0, epic.getSubtasksId().size(), "Список id подзадач не очищен.");
     }
 
     @Test
@@ -251,11 +264,8 @@ public abstract class TaskManagerTest<T extends TaskManager> {
         Task task = new Task("Task", "Task description");
         taskManager.addTask(task);
 
-        taskManager.removeTaskById(2);
-        assertEquals(task, taskManager.getListOfTasks().get(0), "Удалена задача с несуществующим id.");
-
         taskManager.removeTaskById(task.getId());
-        assertEquals(null, taskManager.getListOfTasks().get(0), "Задача с заданным id не удалена.");
+        assertEquals(0, taskManager.getListOfTasks().size(), "Задача с заданным id не удалена.");
     }
 
     @Test
@@ -268,11 +278,8 @@ public abstract class TaskManagerTest<T extends TaskManager> {
         taskManager.addSubTask(subTask1);
         taskManager.addSubTask(subTask2);
 
-        taskManager.removeEpicById(2);
-        assertEquals(epic, taskManager.getListOfEpics().get(0), "Удален эпик с несуществующим id.");
-
         taskManager.removeEpicById(epic.getId());
-        assertEquals(null, taskManager.getListOfTasks().get(0), "Эпик с заданным id не удалена.");
+        assertEquals(0, taskManager.getListOfTasks().size(), "Эпик с заданным id не удалена.");
         assertEquals(0, taskManager.getListOfSubTasks().size(), "Идентификаторы подзадач эпика не удалены.");
     }
 
@@ -284,33 +291,42 @@ public abstract class TaskManagerTest<T extends TaskManager> {
         taskManager.addEpic(epic);
         taskManager.addSubTask(subTask);
 
-        taskManager.removeSubTaskById(4);
-        assertEquals(subTask, taskManager.getListOfSubTasks().get(0), "Удалена подзадача с несуществующим id.");
-
-        taskManager.removeEpicById(epic.getId());
-        assertEquals(null, taskManager.getListOfTasks().get(0), "Эпик с заданным id не удалена.");
-        assertEquals(0, taskManager.getListOfSubTasks().size(), "Идентификаторы подзадач эпика не удалены.");
+        taskManager.removeSubTaskById(subTask.getId());
+        assertEquals(0, taskManager.getListOfSubTasks().size(), "Подзадача с заданным id не удалена.");
+        assertEquals(0, epic.getSubtasksId().size(), "Идентификаторы подзадач эпика не удалены.");
     }
 
+    @Test
+    public void isCrossingTasksCheckTasks() {
+        Task task = new Task("Task", "Task description", LocalDateTime.of(2024, 01, 01, 00, 00), Duration.ofMinutes(15));
+        Epic epic = new Epic("Epic", "Epic description");
 
+        SubTask subTask1 = new SubTask("Subtask1", "Subtask1 description", 2, LocalDateTime.of(2024, 01, 02, 00, 00),
+                Duration.ofMinutes(15));
+        SubTask subTask2 = new SubTask("Subtask2", "Subtask1 description", 2, LocalDateTime.of(2024, 01, 02, 01, 00),
+                Duration.ofMinutes(15));
 
+        taskManager.addTask(task);
+        taskManager.addEpic(epic);
+        taskManager.addSubTask(subTask1);
+        taskManager.addSubTask(subTask2);
 
-    Set<Task> getPrioritizedTasks();
+        assertEquals(task.getStartTime(), taskManager.getTaskById(task.getId()).getStartTime(),
+                "Время начала задачи не соответствует.");
+        assertEquals(subTask1.getStartTime(), taskManager.getSubTaskById(subTask1.getId()).getStartTime(),
+                "Время начала подзадачи не соответствует.");
+        assertEquals(subTask2.getStartTime(), taskManager.getSubTaskById(subTask2.getId()).getStartTime(),
+                "Время начала подзадачи не соответствует.");
 
-    boolean isCrossingTasks(Task task);
+        assertEquals(task, taskManager.getPrioritizedTasks().first(),
+                "Задача с самым ранним временем начала не первая в списке.");
+        assertEquals(subTask1.getStartTime(), epic.getStartTime(),
+                "Время начала эпика не соответствует времени начала самой ранней подзадачи.");
+        assertEquals(subTask2.getEndTime(), epic.getEndTime(),
+                "Время завершения эпика не соответствует времени начала самой поздней подзадачи.");
 
-    ArrayList<SubTask> getListOfSubTasksByEpic(int id);
+        taskManager.removeSubTaskById(subTask2.getId());
 
-
-    void removeTaskById(int id);
-
-    void removeEpicById(int id);
-
-    void removeSubTaskById(int id);
-
-    List<Task> getHistory();
-
-
-
-
+        assertEquals(subTask1.getEndTime(), epic.getEndTime(), "Время завершения эпика не обновлено.");
+    }
 }

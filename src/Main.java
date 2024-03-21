@@ -71,8 +71,6 @@ public class Main {
         for (int i = 0; i < manager.getHistory().size(); i++) {
             System.out.println((i + 1) + ". " + manager.getHistory().get(i));
         }
-
         System.out.println(manager.getPrioritizedTasks().toString());
-
     }
 }

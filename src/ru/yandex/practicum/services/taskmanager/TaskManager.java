@@ -3,14 +3,16 @@ package ru.yandex.practicum.services.taskmanager;
 import ru.yandex.practicum.models.Epic;
 import ru.yandex.practicum.models.SubTask;
 import ru.yandex.practicum.models.Task;
+import ru.yandex.practicum.services.history.HistoryManager;
 
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Set;
+import java.util.TreeSet;
 
 public interface TaskManager {
 
-    Set<Task> getPrioritizedTasks();
+    TreeSet<Task> getPrioritizedTasks();
 
     boolean isCrossingTasks(Task task);
 
@@ -55,4 +57,6 @@ public interface TaskManager {
     void removeSubTaskById(int id);
 
     List<Task> getHistory();
+
+    HistoryManager getHistoryManager();
 }
