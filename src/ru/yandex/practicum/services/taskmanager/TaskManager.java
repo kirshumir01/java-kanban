@@ -7,7 +7,6 @@ import ru.yandex.practicum.services.history.HistoryManager;
 
 import java.util.List;
 import java.util.ArrayList;
-import java.util.Set;
 import java.util.TreeSet;
 
 public interface TaskManager {
