@@ -43,7 +43,7 @@ public interface TaskManager {
 
     void checkEpicStatus(int id);
 
-    void removeAllTask();
+    void removeAllTasks();
 
     void removeAllEpics();
 

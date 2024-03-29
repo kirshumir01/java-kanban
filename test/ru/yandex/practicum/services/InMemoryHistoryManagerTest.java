@@ -81,7 +81,7 @@ public class InMemoryHistoryManagerTest {
         // проверить, что список истории не пуст
         assertFalse(taskManager.getHistoryManager().getHistory().isEmpty(), "Список истории пуст.");
 
-        taskManager.removeAllTask();
+        taskManager.removeAllTasks();
         taskManager.removeAllEpics();
         taskManager.removeAllSubTasks();
 

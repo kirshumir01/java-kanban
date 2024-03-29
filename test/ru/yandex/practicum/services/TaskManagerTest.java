@@ -54,6 +54,8 @@ abstract class TaskManagerTest<T extends TaskManager> {
 
     @Test
     void addSubTaskTest() {
+        Epic epic = new Epic("Epic", "Epic description");
+        taskManager.addEpic(epic);
         SubTask subTask = new SubTask("Subtask", "Subtask description", 1);
         taskManager.addSubTask(subTask);
 
@@ -90,6 +92,8 @@ abstract class TaskManagerTest<T extends TaskManager> {
 
     @Test
     void getAllSubTasksTest() {
+        Epic epic = new Epic("Epic", "Epic description");
+        taskManager.addEpic(epic);
         SubTask subTask = new SubTask("Subtask", "Subtask description", 1);
         taskManager.addSubTask(subTask);
 
@@ -170,11 +174,13 @@ abstract class TaskManagerTest<T extends TaskManager> {
 
     @Test
     public void updateSubTaskTest() {
+        Epic epic = new Epic("Epic", "Epic description");
+        taskManager.addEpic(epic);
         SubTask subTask = new SubTask("SubTask", "SubTask description", 1);
         taskManager.addSubTask(subTask);
 
         SubTask newSubTask = new SubTask("SubTask", "Updated subtask", 1);
-        newSubTask.setId(1);
+        newSubTask.setId(2);
         taskManager.updateSubTask(newSubTask);
 
         final SubTask updatedSubTask = taskManager.getSubTaskById(subTask.getId());
@@ -212,7 +218,7 @@ abstract class TaskManagerTest<T extends TaskManager> {
     }
 
     @Test
-    public void removeAllTasksTest() {
+    public void removeAllTaskssTest() {
         Task task1 = new Task("Task1", "Task description");
         Task task2 = new Task("Task2", "Task description");
 
@@ -221,7 +227,7 @@ abstract class TaskManagerTest<T extends TaskManager> {
 
         assertEquals(2, taskManager.getListOfTasks().size(), "Размер списка не соответствует.");
 
-        taskManager.removeAllTask();
+        taskManager.removeAllTasks();
 
         assertEquals(0, taskManager.getListOfTasks().size(), "Список не очищен.");
     }

@@ -107,9 +107,9 @@ public class InMemoryTaskManager implements TaskManager {
         } else {
             sortedTasks.add(newSubTask);
         }
-        subTaskHashMap.put(newSubTask.getId(), newSubTask);
 
-        if (epicHashMap.get(newSubTask.getEpicId()) != null) {
+        if (epicHashMap.get(newSubTask.getEpicId()) != null && epicHashMap.containsKey(newSubTask.getEpicId())) {
+            subTaskHashMap.put(newSubTask.getId(), newSubTask);
             ArrayList<Integer> subTaskIdList = epicHashMap.get(newSubTask.getEpicId()).getSubtasksId();
             subTaskIdList.add(newSubTask.getId());
             checkEpicStatus(newSubTask.getEpicId());
@@ -238,7 +238,7 @@ public class InMemoryTaskManager implements TaskManager {
     }
 
     @Override
-    public void removeAllTask() {
+    public void removeAllTasks() {
         // преобразовать for-each в stream
         taskHashMap.values().stream().forEach(task -> {
             historyManager.remove(task.getId());
