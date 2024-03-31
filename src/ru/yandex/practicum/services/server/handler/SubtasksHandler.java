@@ -1,18 +1,16 @@
 package ru.yandex.practicum.services.server.handler;
 
 import com.google.gson.Gson;
-import com.google.gson.JsonSyntaxException;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import ru.yandex.practicum.models.SubTask;
+import ru.yandex.practicum.models.TaskStatus;
 import ru.yandex.practicum.services.server.HttpTaskServer;
 import ru.yandex.practicum.services.taskmanager.TaskManager;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.util.Optional;
-import java.util.stream.Collectors;
+import java.util.regex.Pattern;
 
 public class SubtasksHandler implements HttpHandler {
     private final TaskManager taskManager;
@@ -24,150 +22,127 @@ public class SubtasksHandler implements HttpHandler {
     }
 
     @Override
-    public void handle(HttpExchange exchange) throws IOException {
-        // получить метод
+    public void handle(HttpExchange exchange) {
+        String path = exchange.getRequestURI().getPath();
         String method = exchange.getRequestMethod();
-        // разбить путь на части
-        String[] pathParts = exchange.getRequestURI().getPath().split("/");
-        // получить id подзадачи в Optional
-        Optional<Integer> subTaskIdOptional;
 
-        switch (method) {
-            case "GET": {
-                // ecли путь состоит из частей - "[]/[subtasks]"
-                if (pathParts.length == 2 && pathParts[1].equals("subtasks")) {
-                    String response = gson.toJson(taskManager.getListOfSubTasks());
-                    writeResponse(exchange, response, 200);
-                // ecли путь состоит из частей - "[]/[subtasks]/[id]"
-                } else if (pathParts.length == 3 && pathParts[1].equals("subtasks")) {
-                    subTaskIdOptional = getSubTaskId(exchange);
-                    if (subTaskIdOptional.isEmpty()) {
-                        writeResponse(exchange, "Некорректный идентификатор подзадачи", 404);
+        try {
+            switch (method) {
+                case "GET": {
+                    // ecли путь "/subtasks"
+                    if (Pattern.matches("^/subtasks$", path)) {
+                        String response = gson.toJson(taskManager.getListOfSubTasks());
+                        writeResponse(exchange, response);
+                        break;
                     }
-                    int subTaskId = subTaskIdOptional.get();
 
-                    if (taskManager.getSubTaskById(subTaskId) != null) {
-                        String response = taskManager.getListOfSubTasks()
-                                .stream()
-                                .filter(subTask -> subTask.getId() == subTaskId)
-                                .map(subTask -> gson.toJson(taskManager.getSubTaskById(subTask.getId())))
-                                .collect(Collectors.toList()).get(0);
+                    // ecли путь "/subtasks/{id}"
+                    if (Pattern.matches("^/subtasks/\\d+$", path)) {
+                        String pathId = path.replaceFirst("/subtasks/", "");
+                        int id = parsePathId(pathId);
 
-                        writeResponse(exchange, response, 200);
-                    } else {
-                        writeResponse(exchange, "Подзадача с идентификатором " + subTaskId + " отсутствует " +
-                                "в менеджере задач", 404);
-                        return;
-                    }
-                }
-                break;
-            }
-            case "DELETE": {
-                // ecли путь состоит из частей - "[]/[subtasks]"
-                if (pathParts.length == 2 && pathParts[1].equals("subtasks")) {
-                    taskManager.removeAllSubTasks();
-                    writeResponse(exchange, "Удаление всех подзадач выполнено успешно", 200);
-                 // ecли путь состоит из частей - "[]/[subtasks]/[id]"
-                } else if (pathParts.length == 3 && pathParts[1].equals("subtasks")) {
-                    subTaskIdOptional = getSubTaskId(exchange);
-                    if (subTaskIdOptional.isEmpty()) {
-                        writeResponse(exchange, "Некорректный идентификатор подзадачи", 404);
-                        return;
-                    }
-                    int subTaskId = subTaskIdOptional.get();
-
-                    if (taskManager.getSubTaskById(subTaskId) != null) {
-                        taskManager.removeSubTaskById(subTaskId);
-                        writeResponse(exchange, "Удаление подзадачи с идентификатором " + subTaskId +
-                                " выполнено успешно", 200);
-                    } else {
-                        writeResponse(exchange, "Задача с идентификатором " + subTaskId +
-                                " отсутствует в менеджере задач", 404);
-                        return;
-                    }
-                }
-                break;
-            }
-            case "POST": {
-                String request = readRequest(exchange);
-
-                try {
-                    SubTask subTask = gson.fromJson(request, SubTask.class);
-                    // ecли путь состоит из частей - "[]/[subtasks]"
-                    if (pathParts.length == 2 && pathParts[1].equals("subtasks")) {
-                        // проверка подзадачи на пересечение с остальными задачами в sortedList;
-                        if (taskManager.isCrossingTasks(subTask)) {
-                            writeResponse(exchange, "Подзадача пересекается по времени с существующими задачами", 406);
-                            return;
-                        }
-
-                        taskManager.addSubTask(subTask);
-                        writeResponse(exchange, "Подзадача успешно добавлена, подзадаче присвоен идентификатор " +
-                                subTask.getId(), 201);
-                    // ecли путь состоит из частей - "[]/[subtasks]/[id]"
-                    } else if (pathParts.length == 3 && pathParts[1].equals("subtasks")) {
-                        // проверка подзадачи на пересечение с остальными задачами в sortedList
-                        // за исключением обновляемой
-                        if (taskManager.isCrossingTasks(subTask) && taskManager.getListOfSubTasks().contains(subTask)) {
-                            writeResponse(exchange, "Подзадача пересекается по времени с существующими задачами", 406);
-                            return;
-                        }
-
-                        subTaskIdOptional = getSubTaskId(exchange);
-                        if (subTaskIdOptional.isEmpty()) {
-                            writeResponse(exchange, "Некорректный идентификатор подзадачи", 404);
-                            return;
-                        }
-                        int subTaskId = subTaskIdOptional.get();
-
-                        if (taskManager.getSubTaskById(subTaskId) != null) {
-                            subTask.setId(subTaskId);
-                            taskManager.updateSubTask(subTask);
-                            writeResponse(exchange, "Подзадача с идентификатором " + subTaskId +
-                                    " успешно обновлена", 201);
+                        if (id != -1 && taskManager.getSubTaskById(id) != null) {
+                            String response = gson.toJson(taskManager.getSubTaskById(id));
+                            writeResponse(exchange, response);
                         } else {
-                            writeResponse(exchange, "Задача с идентификатором " + subTaskId + " отсутствует " +
-                                    "в менеджере задач", 404);
-                            return;
+                            System.out.println("Получен некорректный идентификатор подзадачи: " + pathId);
+                            exchange.sendResponseHeaders(404, 0);
+                        }
+                        break;
+                    }
+                    break;
+                }
+                case "DELETE": {
+                    // ecли путь "/subtasks?id=[id]"
+                    if (Pattern.matches("^/subtasks$", path)) {
+                        String query = exchange.getRequestURI().getQuery();
+
+                        if (query != null) {
+                            String pathId = query.substring(3);
+                            int id = parsePathId(pathId);
+
+                            if (id != -1 && taskManager.getSubTaskById(id) != null) {
+                                taskManager.removeSubTaskById(id);
+                                System.out.println("Подзадача с идентификатором " + id + " удалена");
+                                exchange.sendResponseHeaders(200, 0);
+                            } else {
+                                System.out.println("Получен некорректный идентификатор подзадачи: " + pathId);
+                                exchange.sendResponseHeaders(404, 0);
+                            }
+                        } else {
+                            System.out.println("В строке запроса отсутствуют параметры");
+                            exchange.sendResponseHeaders(404, 0);
                         }
                     }
-                } catch (JsonSyntaxException e) {
-                    writeResponse(exchange, "Некорректный формат JSON-объекта", 404);
+                    break;
                 }
-                break;
+                case "POST": {
+                    String request = readRequest(exchange);
+                    SubTask subTask = gson.fromJson(request, SubTask.class);
+                    subTask.setStatus(TaskStatus.NEW);
+
+                    // проверка задачи на пересечение с остальными задачами в sortedList
+                    if (taskManager.isCrossingTasks(subTask)) {
+                        System.out.println("Подзадача пересекается по времени с существующими задачами");
+                        exchange.sendResponseHeaders(406, 0);
+                        break;
+                    }
+
+                    // ecли путь "/subtasks?id=[id]"
+                    if (Pattern.matches("^/subtasks$", path)) {
+                        String query = exchange.getRequestURI().getQuery();
+
+                        if (query != null) {
+                            String pathId = query.substring(3);
+                            int id = parsePathId(pathId);
+
+                            if (id != -1 && taskManager.getSubTaskById(id) != null) {
+                                taskManager.updateSubTask(subTask);
+                                System.out.println("Подзадача c идентификатором " + subTask.getId() + " успешно обновлена");
+                                exchange.sendResponseHeaders(201, 0);
+                            } else {
+                                System.out.println("Подзадача с идентификатором " + subTask.getId() + " отсутствует");
+                                exchange.sendResponseHeaders(404, 0);
+                            }
+                        } else {
+                            taskManager.addSubTask(subTask);
+                            System.out.println("Подзадача успешно добавлена, подзадаче присвоен идентификатор "
+                                    + subTask.getId());
+                            exchange.sendResponseHeaders(201, 0);
+                        }
+                    }
+                    break;
+                }
+                default: {
+                    System.out.println("Обработка эндпоинта " + method + " не предусмотрена программой");
+                    exchange.sendResponseHeaders(404, 0);
+                }
             }
-            default: {
-                writeResponse(exchange, "Обработка эндпоинта " + method + " не предусмотрена программой", 404);
-                break;
-            }
+        } catch(Exception exception){
+            exception.printStackTrace();
+        } finally{
+            exchange.close();
         }
     }
 
-    // получение id подзадачи в Optional
-    private Optional<Integer> getSubTaskId(HttpExchange exchange) {
-        String[] pathParts = exchange.getRequestURI().getPath().split("/");
-
+    private int parsePathId(String pathId) {
         try {
-            return Optional.of(Integer.parseInt(pathParts[2]));
+            return Integer.parseInt(pathId);
         } catch (NumberFormatException exception) {
-            return Optional.empty();
+            return -1;
         }
     }
 
     // обработать запрос клиента
     private String readRequest(HttpExchange exchange) throws IOException {
-        // получить входящий поток байтов
-        InputStream inputStream = exchange.getRequestBody();
-        // получить данные запроса в виде массива байтов и конвертировать их в строку
-        return new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
+        return new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.UTF_8);
     }
 
     // сформировать ответ сервера
-    private void writeResponse(HttpExchange exchange, String responseString, int responseCode) throws IOException {
+    private void writeResponse(HttpExchange exchange, String responseString) throws IOException {
         byte[] response = responseString.getBytes(StandardCharsets.UTF_8);
         exchange.getResponseHeaders().add("Content-Type", "application/json;charset=utf-8");
-        exchange.sendResponseHeaders(responseCode, response.length);
+        exchange.sendResponseHeaders(200, response.length);
         exchange.getResponseBody().write(response);
-        exchange.close();
     }
 }

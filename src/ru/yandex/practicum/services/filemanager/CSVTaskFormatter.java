@@ -65,11 +65,13 @@ public class CSVTaskFormatter {
             }
             task.setId(Integer.parseInt(values[0]));
             task.setStatus(TaskStatus.valueOf(values[3]));
+            task.setType();
         } else if (values[1].equals((TaskType.EPIC.toString()))) {
             // чтение остается без изменений - время эпика расчетное и зависит от subTask
             task = new Epic(values[2], values[4]);
             task.setId(Integer.parseInt(values[0]));
             task.setStatus(TaskStatus.valueOf(values[3]));
+            task.setType();
         } else if (values[1].equals((TaskType.SUBTASK.toString()))) {
             if (values.length == 9) {
                 // чтение из разбитой строки формата:
@@ -81,6 +83,7 @@ public class CSVTaskFormatter {
             }
             task.setId(Integer.parseInt(values[0]));
             task.setStatus(TaskStatus.valueOf(values[3]));
+            task.setType();
         }
         return task;
     }

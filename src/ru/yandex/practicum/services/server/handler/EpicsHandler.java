@@ -1,20 +1,16 @@
 package ru.yandex.practicum.services.server.handler;
 
 import com.google.gson.Gson;
-import com.google.gson.JsonSyntaxException;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import ru.yandex.practicum.models.Epic;
-import ru.yandex.practicum.models.SubTask;
+import ru.yandex.practicum.models.TaskStatus;
 import ru.yandex.practicum.services.server.HttpTaskServer;
 import ru.yandex.practicum.services.taskmanager.TaskManager;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Optional;
-import java.util.stream.Collectors;
+import java.util.regex.Pattern;
 
 public class EpicsHandler implements HttpHandler {
     private final TaskManager taskManager;
@@ -26,181 +22,119 @@ public class EpicsHandler implements HttpHandler {
     }
 
     @Override
-    public void handle(HttpExchange exchange) throws IOException {
-        // получить метод
+    public void handle(HttpExchange exchange) {
+        String path = exchange.getRequestURI().getPath();
         String method = exchange.getRequestMethod();
-        // разбить путь на части
-        String[] pathParts = exchange.getRequestURI().getPath().split("/");
-        // получить id эпика в Optional
-        Optional<Integer> epicIdOptional;
 
-        switch (method) {
-            case "GET": {
-                // ecли путь состоит из частей - "[]/[epics]"
-                if (pathParts.length == 2 && pathParts[1].equals("epics")) {
-                    String response = gson.toJson(taskManager.getListOfEpics());
-                    writeResponse(exchange, response, 200);
-                // ecли путь состоит из частей - "[]/[epics]/[id]"
-                } else if (pathParts.length == 3 && pathParts[1].equals("epics")) {
-                    epicIdOptional = getEpicId(exchange);
-                    if (epicIdOptional.isEmpty()) {
-                        writeResponse(exchange, "Некорректный идентификатор эпика", 404);
+        try {
+            switch (method) {
+                case "GET": {
+                    // ecли путь "/epics"
+                    if (Pattern.matches("^/epics$", path)) {
+                        String response = gson.toJson(taskManager.getListOfEpics());
+                        writeResponse(exchange, response);
+                        break;
                     }
-                    int epicId = epicIdOptional.get();
 
-                    if (taskManager.getEpicById(epicId) != null) {
-                        String response = taskManager.getListOfEpics()
-                                .stream()
-                                .filter(epic -> epic.getId() == epicId)
-                                .map(epic -> gson.toJson(taskManager.getEpicById(epic.getId())))
-                                .collect(Collectors.toList()).get(0);
+                    // ecли путь "/epics/{id}"
+                    if (Pattern.matches("^/epics/\\d+$", path)) {
+                        String pathId = path.replaceFirst("/epics/", "");
+                        int id = parsePathId(pathId);
 
-                        writeResponse(exchange, response, 200);
-                    } else {
-                        writeResponse(exchange, "Эпик с идентификатором " + epicId + " отсутствует " +
-                                "в менеджере задач", 404);
-                        return;
-                    }
-                // ecли путь состоит из частей - "[]/[epics]/[id]/[subtasks]"
-                } else if (pathParts.length == 4 && pathParts[1].equals("epics") && pathParts[3].equals("subtasks")) {
-                    epicIdOptional = getEpicId(exchange);
-                    if (epicIdOptional.isEmpty()) {
-                        writeResponse(exchange, "Некорректный идентификатор эпика", 404);
-                    }
-                    int epicId = epicIdOptional.get();
-
-                    if (taskManager.getEpicById(epicId) != null) {
-                        String response = taskManager.getListOfEpics()
-                                .stream()
-                                .filter(epic -> epic.getId() == epicId)
-                                .map(epic -> gson.toJson(taskManager.getListOfSubTasksByEpic(epic.getId())))
-                                .collect(Collectors.toList()).get(0);
-
-                        writeResponse(exchange, response, 200);
-                    } else {
-                        writeResponse(exchange, "Эпик с идентификатором " + epicId + " отсутствует " +
-                                "в менеджере задач", 404);
-                        return;
-                    }
-                }
-                break;
-            }
-            case "DELETE": {
-                // ecли путь состоит из частей - "[]/[epics]"
-                if (pathParts.length == 2 && pathParts[1].equals("epics")) {
-                    taskManager.removeAllEpics();
-                    writeResponse(exchange, "Удаление всех эпиков выполнено успешно", 200);
-                // ecли путь состоит из частей - "[]/[epics]/[id]"
-                } else if (pathParts.length == 3 && pathParts[1].equals("epics")) {
-                    epicIdOptional = getEpicId(exchange);
-                    if (epicIdOptional.isEmpty()) {
-                        writeResponse(exchange, "Некорректный идентификатор эпика", 404);
-                        return;
-                    }
-                    int epicId = epicIdOptional.get();
-
-                    if (taskManager.getEpicById(epicId) != null) {
-                        taskManager.removeEpicById(epicId);
-                        writeResponse(exchange, "Удаление эпика с идентификатором " + epicId + " выполнено успешно", 200);
-                    } else {
-                        writeResponse(exchange, "Эпик с идентификатором " + epicId + " отсутствует " +
-                                "в менеджере задач", 404);
-                        return;
-                    }
-                // ecли путь состоит из частей - "[]/[epics]/[id]/[subtasks]"
-                } else if (pathParts.length == 4 && pathParts[1].equals("epics") && pathParts[3].equals("subtasks")) {
-                    epicIdOptional = getEpicId(exchange);
-                    if (epicIdOptional.isEmpty()) {
-                        writeResponse(exchange, "Некорректный идентификатор эпика", 404);
-                        return;
-                    }
-                    int epicId = epicIdOptional.get();
-
-                    // удалить все подзадачи эпика
-                    if (taskManager.getEpicById(epicId) != null) {
-                        ArrayList<SubTask> subTasks = taskManager.getListOfSubTasksByEpic(epicId);
-
-                        subTasks
-                                .stream()
-                                .forEach(subTask -> {
-                                    taskManager.removeSubTaskById(subTask.getId());
-                                });
-                        writeResponse(exchange, "Удаление подзадач эпика с идентификатором " + epicId +
-                                " выполнено успешно", 200);
-                    } else {
-                        writeResponse(exchange, "Эпик с идентификатором " + epicId + " отсутствует " +
-                                "в менеджере задач", 404);
-                        return;
-                    }
-                }
-                break;
-            }
-            case "POST": {
-                String request = readRequest(exchange);
-
-                try {
-                    Epic epic = gson.fromJson(request, Epic.class);
-                    // ecли путь состоит из частей - "[]/[epics]"
-                    if (pathParts.length == 2 && pathParts[1].equals("epics")) {
-                        taskManager.addEpic(epic);
-                        writeResponse(exchange, "Эпик успешно добавлен, эпику присвоен идентификатор " +
-                                epic.getId(), 201);
-                    // ecли путь состоит из частей - "[]/[epics]/[id]"
-                    } else if (pathParts.length == 3 && pathParts[1].equals("epics")) {
-                        epicIdOptional = getEpicId(exchange);
-                        if (epicIdOptional.isEmpty()) {
-                            writeResponse(exchange, "Некорректный идентификатор эпика", 404);
-                            return;
-                        }
-                        int epicId = epicIdOptional.get();
-
-                        if (taskManager.getEpicById(epicId) != null) {
-                            epic.setId(epicId);
-                            taskManager.updateEpic(epic);
-                            writeResponse(exchange, "Эпик с идентификатором " + epicId + " успешно обновлен", 201);
+                        if (id != -1 && taskManager.getEpicById(id) != null) {
+                            String response = gson.toJson(taskManager.getEpicById(id));
+                            writeResponse(exchange, response);
                         } else {
-                            writeResponse(exchange, "Эпик с идентификатором " + epicId + " отсутствует " +
-                                    "в менеджере задач", 404);
-                            return;
+                            System.out.println("Получен некорректный идентификатор эпика: " + pathId);
+                            exchange.sendResponseHeaders(404, 0);
+                        }
+                        break;
+                    }
+
+                    // ecли путь "/epics/{id}/subtasks"
+                    if (Pattern.matches("^/epics/\\d+/subtasks$", path)) {
+                        String pathId = path.replaceFirst("/epics/", "")
+                                .replaceFirst("/subtasks", "");
+                        int id = parsePathId(pathId);
+
+                        if (id != -1 && taskManager.getEpicById(id) != null) {
+                            String response = gson.toJson(taskManager.getListOfSubTasksByEpic(id));
+                            writeResponse(exchange, response);
+                        } else {
+                            System.out.println("Получен некорректный идентификатор эпика: " + pathId);
+                            exchange.sendResponseHeaders(404, 0);
+                        }
+                        break;
+                    }
+                    break;
+                }
+                case "DELETE": {
+                    // ecли путь "/epics?id=[id]"
+                    if (Pattern.matches("^/epics$", path)) {
+                        String query = exchange.getRequestURI().getQuery();
+
+                        if (query != null) {
+                            String pathId = query.substring(3);
+                            int id = parsePathId(pathId);
+
+                            if (id != -1 && taskManager.getEpicById(id) != null) {
+                                taskManager.removeEpicById(id);
+                                System.out.println("Эпик с идентификатором " + id + " удален");
+                                exchange.sendResponseHeaders(200, 0);
+                            } else {
+                                System.out.println("Получен некорректный идентификатор эпика: " + pathId);
+                                exchange.sendResponseHeaders(404, 0);
+                            }
+                        } else {
+                            System.out.println("В строке запроса отсутствуют параметры");
+                            exchange.sendResponseHeaders(404, 0);
                         }
                     }
-                } catch (JsonSyntaxException e) {
-                    writeResponse(exchange, "Некорректный формат JSON-объекта", 404);
+                    break;
                 }
-                break;
+                case "POST": {
+                    String request = readRequest(exchange);
+                    Epic epic = gson.fromJson(request, Epic.class);
+                    epic.setStatus(TaskStatus.NEW);
+
+                    // ecли путь "/epics"
+                    if (Pattern.matches("^/epics$", path)) {
+                        taskManager.addEpic(epic);
+                        System.out.println("Эпик успешно добавлен, эпику присвоен идентификатор " + epic.getId());
+                        exchange.sendResponseHeaders(201, 0);
+                    }
+                    break;
+                }
+                default: {
+                    System.out.println("Обработка эндпоинта " + method + " не предусмотрена программой");
+                    exchange.sendResponseHeaders(404, 0);
+                }
             }
-            default: {
-                writeResponse(exchange, "Эндпоинт " + method + " не существует", 404);
-                break;
-            }
+        } catch(Exception exception){
+            exception.printStackTrace();
+        } finally{
+            exchange.close();
         }
     }
 
-    // получение id эпика в Optional
-    private Optional<Integer> getEpicId(HttpExchange exchange) {
-        String[] pathParts = exchange.getRequestURI().getPath().split("/");
-
+    private int parsePathId(String pathId) {
         try {
-            return Optional.of(Integer.parseInt(pathParts[2]));
+            return Integer.parseInt(pathId);
         } catch (NumberFormatException exception) {
-            return Optional.empty();
+            return -1;
         }
     }
 
     // обработать запрос клиента
     private String readRequest(HttpExchange exchange) throws IOException {
-        // получить входящий поток байтов
-        InputStream inputStream = exchange.getRequestBody();
-        // получить данные запроса в виде массива байтов и конвертировать их в строку
-        return new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
+        return new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.UTF_8);
     }
 
     // сформировать ответ сервера
-    private void writeResponse(HttpExchange exchange, String responseString, int responseCode) throws IOException {
+    private void writeResponse(HttpExchange exchange, String responseString) throws IOException {
         byte[] response = responseString.getBytes(StandardCharsets.UTF_8);
         exchange.getResponseHeaders().add("Content-Type", "application/json;charset=utf-8");
-        exchange.sendResponseHeaders(responseCode, response.length);
+        exchange.sendResponseHeaders(200, response.length);
         exchange.getResponseBody().write(response);
-        exchange.close();
     }
 }

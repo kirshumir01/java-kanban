@@ -2,6 +2,7 @@ package ru.yandex.practicum.services.taskmanager;
 
 import ru.yandex.practicum.models.*;
 import ru.yandex.practicum.services.Managers;
+import ru.yandex.practicum.services.exceptions.ManagerSaveException;
 import ru.yandex.practicum.services.history.HistoryManager;
 
 import java.time.Duration;
@@ -35,12 +36,15 @@ public class InMemoryTaskManager implements TaskManager {
         if (task.getStartTime() != null && task.getDuration() != null) {
             return !sortedTasks
                     .stream()
-                    .filter(t -> t.getStartTime() != null && t.getDuration() != null)
+                    .filter(t -> t.getEndTime() != null && !t.equals(task) && (t.getId() != task.getId()))
                     .allMatch(t -> (
-                            (task.getStartTime().isBefore(t.getStartTime()) &&
-                            task.getEndTime().isBefore(t.getStartTime())) ||
-                            (task.getStartTime().isAfter(t.getEndTime()) &&
-                            task.getEndTime().isAfter(t.getEndTime()))));
+                            (task.getStartTime().isBefore(t.getStartTime())
+                                    && task.getEndTime().isBefore(t.getStartTime())) ||
+                            (task.getStartTime().isAfter(t.getEndTime())
+                                    && task.getEndTime().isAfter(t.getEndTime())) ||
+                            (task.getEndTime().equals(t.getStartTime()) || task.getStartTime().equals(t.getEndTime()))));
+        } else if (task.getStartTime() == null && task.getDuration() == null) {
+            return false;
         }
         return true;
     }
@@ -81,18 +85,20 @@ public class InMemoryTaskManager implements TaskManager {
         newTask.setId(++defaultId);
         // если по времени задачи пересекаются - обнулить время добавляемой задачи
         if (isCrossingTasks(newTask)) {
-            newTask.setDuration(null);
-            newTask.setStartTime(null);
-            sortedTasks.add(newTask);
+            throw new ManagerSaveException("Задача не сохранена. Время выполнения задачи пересекается" +
+                    " со временем существующих задач");
         } else {
             sortedTasks.add(newTask);
         }
+        newTask.setType();
         taskHashMap.put(newTask.getId(), newTask);
     }
 
     @Override
     public void addEpic(Epic newEpic) {
         newEpic.setId(++defaultId);
+        newEpic.setType();
+        updateEpicTime(newEpic);
         epicHashMap.put(newEpic.getId(), newEpic);
     }
 
@@ -101,14 +107,14 @@ public class InMemoryTaskManager implements TaskManager {
         // если по времени задачи пересекаются - обнулить время добавляемой задачи
         newSubTask.setId(++defaultId);
         if (isCrossingTasks(newSubTask)) {
-            newSubTask.setDuration(null);
-            newSubTask.setStartTime(null);
-            sortedTasks.add(newSubTask);
+            throw new ManagerSaveException("Подзадача не сохранена. Время выполнения подзадачи пересекается" +
+                    " со временем существующих задач");
         } else {
             sortedTasks.add(newSubTask);
         }
 
         if (epicHashMap.get(newSubTask.getEpicId()) != null && epicHashMap.containsKey(newSubTask.getEpicId())) {
+            newSubTask.setType();
             subTaskHashMap.put(newSubTask.getId(), newSubTask);
             ArrayList<Integer> subTaskIdList = epicHashMap.get(newSubTask.getEpicId()).getSubtasksId();
             subTaskIdList.add(newSubTask.getId());
@@ -169,10 +175,11 @@ public class InMemoryTaskManager implements TaskManager {
     public void updateTask(Task newTask) {
         if (taskHashMap.containsKey(newTask.getId())) {
             if (isCrossingTasks(newTask)) {
-                newTask.setDuration(null);
-                newTask.setStartTime(null);
+                throw new ManagerSaveException("Задача не сохранена. Время выполнения задачи пересекается" +
+                        " со временем существующих задач");
             }
 
+            newTask.setType();
             taskHashMap.put(newTask.getId(), newTask);
 
             // создать новый sortedList без старой Task и добавить newTask
@@ -186,6 +193,8 @@ public class InMemoryTaskManager implements TaskManager {
     @Override
     public void updateEpic(Epic newEpic) {
         if (epicHashMap.containsKey(newEpic.getId())) {
+            newEpic.setType();
+            updateEpicTime(newEpic);
             epicHashMap.put(newEpic.getId(), newEpic);
         }
     }
@@ -194,10 +203,11 @@ public class InMemoryTaskManager implements TaskManager {
     public void updateSubTask(SubTask newSubTask) {
         if (subTaskHashMap.containsKey(newSubTask.getId())) {
             if (isCrossingTasks(newSubTask)) {
-                newSubTask.setDuration(null);
-                newSubTask.setStartTime(null);
+                throw new ManagerSaveException("Подзадача не сохранена. Время выполнения подзадачи пересекается" +
+                        " со временем существующих задач");
             }
 
+            newSubTask.setType();
             subTaskHashMap.put(newSubTask.getId(), newSubTask);
 
             if (epicHashMap.get(newSubTask.getEpicId()) != null) {

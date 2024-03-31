@@ -1,18 +1,16 @@
 package ru.yandex.practicum.services.server.handler;
 
 import com.google.gson.Gson;
-import com.google.gson.JsonSyntaxException;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import ru.yandex.practicum.models.Task;
+import ru.yandex.practicum.models.TaskStatus;
 import ru.yandex.practicum.services.server.HttpTaskServer;
 import ru.yandex.practicum.services.taskmanager.TaskManager;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.util.Optional;
-import java.util.stream.Collectors;
+import java.util.regex.Pattern;
 
 public class TasksHandler implements HttpHandler {
     private final TaskManager taskManager;
@@ -24,149 +22,126 @@ public class TasksHandler implements HttpHandler {
     }
 
     @Override
-    public void handle(HttpExchange exchange) throws IOException {
-        // получить метод
+    public void handle(HttpExchange exchange) {
+        String path = exchange.getRequestURI().getPath();
         String method = exchange.getRequestMethod();
-        // разбить путь на части
-        String[] pathParts = exchange.getRequestURI().getPath().split("/");
-        // получить id задачи в Optional
-        Optional<Integer> taskIdOptional;
 
-        switch (method) {
-            case "GET": {
-                // ecли путь состоит из частей - "[]/[tasks]"
-                if (pathParts.length == 2 && pathParts[1].equals("tasks")) {
-                    String response = gson.toJson(taskManager.getListOfTasks());
-                    writeResponse(exchange, response, 200);
-                // ecли путь состоит из частей - "[]/[tasks]/[id]"
-                } else if (pathParts.length == 3 && pathParts[1].equals("tasks")) {
-                    taskIdOptional = getTaskId(exchange);
-                    if (taskIdOptional.isEmpty()) {
-                        writeResponse(exchange, "Некорректный идентификатор задачи", 404);
+        try {
+            switch (method) {
+                case "GET": {
+                    // ecли путь "/tasks"
+                    if (Pattern.matches("^/tasks$", path)) {
+                        String response = gson.toJson(taskManager.getListOfTasks());
+                        writeResponse(exchange, response);
+                        break;
                     }
-                    int taskId = taskIdOptional.get();
 
-                    if (taskManager.getTaskById(taskId) != null) {
-                        String response = taskManager.getListOfTasks()
-                                .stream()
-                                .filter(task -> task.getId() == taskId)
-                                .map(task -> gson.toJson(taskManager.getTaskById(task.getId())))
-                                .collect(Collectors.toList()).get(0);
+                    // ecли путь "/tasks/{id}"
+                    if (Pattern.matches("^/tasks/\\d+$", path)) {
+                        String pathId = path.replaceFirst("/tasks/", "");
+                        int id = parsePathId(pathId);
 
-                        writeResponse(exchange, response, 200);
-                    } else {
-                        writeResponse(exchange, "Задача с идентификатором " + taskId + " отсутствует " +
-                                "в менеджере задач", 404);
-                        return;
-                    }
-                }
-                break;
-            }
-            case "DELETE": {
-                // ecли путь состоит из частей - "[]/[tasks]"
-                if (pathParts.length == 2 && pathParts[1].equals("tasks")) {
-                    taskManager.removeAllTasks();
-                    writeResponse(exchange, "Удаление всех задач выполнено успешно", 200);
-                // ecли путь состоит из частей - "[]/[tasks]/[id]"
-                } else if (pathParts.length == 3 && pathParts[1].equals("tasks")) {
-                    taskIdOptional = getTaskId(exchange);
-                    if (taskIdOptional.isEmpty()) {
-                        writeResponse(exchange, "Некорректный идентификатор задачи", 404);
-                        return;
-                    }
-                    int taskId = taskIdOptional.get();
-
-                    if (taskManager.getTaskById(taskId) != null) {
-                        taskManager.removeTaskById(taskId);
-                        writeResponse(exchange, "Удаление задачи с идентификатором " + taskId + " выполнено успешно",
-                                200);
-                    } else {
-                        writeResponse(exchange, "Задача с идентификатором " + taskId + " отсутствует в менеджере задач",
-                                404);
-                        return;
-                    }
-                }
-                break;
-            }
-            case "POST": {
-                String request = readRequest(exchange);
-
-                try {
-                    Task task = gson.fromJson(request, Task.class);
-                    // ecли путь состоит из частей - "[]/[tasks]"
-                    if (pathParts.length == 2 && pathParts[1].equals("tasks")) {
-                        // проверка задачи на пересечение с остальными задачами в sortedList
-                        if (taskManager.isCrossingTasks(task)) {
-                            writeResponse(exchange, "Задача пересекается по времени с существующими задачами", 406);
-                            return;
-                        }
-
-                        taskManager.addTask(task);
-                        writeResponse(exchange, "Задача успешно добавлена, задаче присвоен идентификатор " +
-                                task.getId(), 201);
-                    // ecли путь состоит из частей - "[]/[tasks]/[id]"
-                    } else if (pathParts.length == 3 && pathParts[1].equals("tasks")) {
-                        // проверка задачи на пересечение с остальными задачами в sortedList
-                        // за исключением обновляемой
-                        if (taskManager.isCrossingTasks(task) && taskManager.getListOfTasks().contains(task)) {
-                            writeResponse(exchange, "Задача пересекается по времени с существующими задачами", 406);
-                            return;
-                        }
-
-                        taskIdOptional = getTaskId(exchange);
-                        if (taskIdOptional.isEmpty()) {
-                            writeResponse(exchange, "Некорректный идентификатор задачи", 404);
-                            return;
-                        }
-                        int taskId = taskIdOptional.get();
-
-                        if (taskManager.getTaskById(taskId) != null) {
-                            task.setId(taskId);
-                            taskManager.updateTask(task);
-                            writeResponse(exchange, "Задача с идентификатором " + taskId + " успешно обновлена", 201);
+                        if (id != -1 && taskManager.getTaskById(id) != null) {
+                            String response = gson.toJson(taskManager.getTaskById(id));
+                            writeResponse(exchange, response);
                         } else {
-                            writeResponse(exchange, "Задача с идентификатором " + taskId + " отсутствует " +
-                                    "в менеджере задач", 404);
-                            return;
+                            System.out.println("Получен некорректный идентификатор задачи: " + pathId);
+                            exchange.sendResponseHeaders(404, 0);
+                        }
+                        break;
+                    }
+                    break;
+                }
+                case "DELETE": {
+                    // ecли путь "/tasks?id=[id]"
+                    if (Pattern.matches("^/tasks$", path)) {
+                        String query = exchange.getRequestURI().getQuery();
+
+                        if (query != null) {
+                            String pathId = query.substring(3);
+                            int id = parsePathId(pathId);
+
+                            if (id != -1 && taskManager.getTaskById(id) != null) {
+                                taskManager.removeTaskById(id);
+                                System.out.println("Задача с идентификатором " + id + " удалена");
+                                exchange.sendResponseHeaders(200, 0);
+                            } else {
+                                System.out.println("Получен некорректный идентификатор задачи: " + pathId);
+                                exchange.sendResponseHeaders(404, 0);
+                            }
+                        } else {
+                            System.out.println("В строке запроса отсутствуют параметры");
+                            exchange.sendResponseHeaders(404, 0);
                         }
                     }
-                } catch (JsonSyntaxException e) {
-                    writeResponse(exchange, "Некорректный формат JSON-объекта", 404);
+                    break;
                 }
-                break;
+                case "POST": {
+                    String request = readRequest(exchange);
+                    Task task = gson.fromJson(request, Task.class);
+                    task.setStatus(TaskStatus.NEW);
+
+                    // проверка задачи на пересечение с остальными задачами в sortedList
+                    if (taskManager.isCrossingTasks(task)) {
+                        System.out.println("Задача пересекается по времени с существующими задачами");
+                        exchange.sendResponseHeaders(406, 0);
+                        break;
+                    }
+
+                    // ecли путь "/tasks"
+                    if (Pattern.matches("^/tasks$", path)) {
+                        String query = exchange.getRequestURI().getQuery();
+
+                        if (query != null) {
+                            String pathId = query.substring(3);
+                            int id = parsePathId(pathId);
+
+                            if (id != -1 && taskManager.getTaskById(id) != null) {
+                                taskManager.updateTask(task);
+                                System.out.println("Задача c идентификатором " + task.getId() + " успешно обновлена");
+                                exchange.sendResponseHeaders(201, 0);
+                            } else {
+                                System.out.println("Задача с идентификатором " + pathId + " отсутствует");
+                                exchange.sendResponseHeaders(404, 0);
+                            }
+                        } else {
+                            taskManager.addTask(task);
+                            System.out.println("Задача успешно добавлена, задаче присвоен идентификатор " + task.getId());
+                            exchange.sendResponseHeaders(201, 0);
+                        }
+                    }
+                    break;
+                }
+                default: {
+                    System.out.println("Обработка эндпоинта " + method + " не предусмотрена программой");
+                    exchange.sendResponseHeaders(404, 0);
+                }
             }
-            default: {
-                writeResponse(exchange, "Обработка эндпоинта " + method + " не предусмотрена программой", 404);
-                break;
-            }
+        } catch(Exception exception){
+            exception.printStackTrace();
+        } finally{
+            exchange.close();
         }
     }
 
-    // получение id задачи в Optional
-    private Optional<Integer> getTaskId(HttpExchange exchange) {
-        String[] pathParts = exchange.getRequestURI().getPath().split("/");
-
+    private int parsePathId(String pathId) {
         try {
-            return Optional.of(Integer.parseInt(pathParts[2]));
+            return Integer.parseInt(pathId);
         } catch (NumberFormatException exception) {
-            return Optional.empty();
+            return -1;
         }
     }
 
     // обработать запрос клиента
     private String readRequest(HttpExchange exchange) throws IOException {
-        // получить входящий поток байтов
-        InputStream inputStream = exchange.getRequestBody();
-        // получить данные запроса в виде массива байтов и конвертировать их в строку
-        return new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
+        return new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.UTF_8);
     }
 
     // сформировать ответ сервера
-    private void writeResponse(HttpExchange exchange, String responseString, int responseCode) throws IOException {
+    private void writeResponse(HttpExchange exchange, String responseString) throws IOException {
         byte[] response = responseString.getBytes(StandardCharsets.UTF_8);
         exchange.getResponseHeaders().add("Content-Type", "application/json;charset=utf-8");
-        exchange.sendResponseHeaders(responseCode, response.length);
+        exchange.sendResponseHeaders(200, response.length);
         exchange.getResponseBody().write(response);
-        exchange.close();
     }
 }

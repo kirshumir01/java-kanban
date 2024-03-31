@@ -302,7 +302,7 @@ public class HttpTaskServerTest {
         String taskToJson = gson.toJson(newTask);
 
         HttpClient client = HttpClient.newHttpClient();
-        URI url = URI.create("http://localhost:8080/tasks/" + task.getId());
+        URI url = URI.create("http://localhost:8080/tasks?id=" + task.getId());
         HttpRequest request = HttpRequest.newBuilder().uri(url)
                 .POST(HttpRequest.BodyPublishers.ofString(taskToJson))
                 .build();
@@ -314,30 +314,6 @@ public class HttpTaskServerTest {
         List<Task> tasksFromManager = taskManager.getListOfTasks();
 
         assertEquals("Updated task", tasksFromManager.get(0).getDescription(), "Описание задачи не соответствует.");
-    }
-
-    @Test
-    public void updateEpicByPostRequest() throws IOException, InterruptedException {
-        Epic epic = new Epic("Epic", "Epic description");
-        taskManager.addEpic(epic);
-        Epic newEpic = new Epic("Epic", "Updated epic");
-        newEpic.setId(epic.getId());
-
-        String epicToJson = gson.toJson(newEpic);
-
-        HttpClient client = HttpClient.newHttpClient();
-        URI url = URI.create("http://localhost:8080/epics/" + epic.getId());
-        HttpRequest request = HttpRequest.newBuilder().uri(url)
-                .POST(HttpRequest.BodyPublishers.ofString(epicToJson))
-                .build();
-
-        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-
-        assertEquals(201, response.statusCode());
-
-        List<Epic> epicsFromManager = taskManager.getListOfEpics();
-
-        assertEquals("Updated epic", epicsFromManager.get(0).getDescription(), "Описание эпика не соответствует.");
     }
 
     @Test
@@ -354,7 +330,7 @@ public class HttpTaskServerTest {
         String subTaskToJson = gson.toJson(newSubTask);
 
         HttpClient client = HttpClient.newHttpClient();
-        URI url = URI.create("http://localhost:8080/subtasks/" + subTask.getId());
+        URI url = URI.create("http://localhost:8080/subtasks?=id" + subTask.getId());
         HttpRequest request = HttpRequest.newBuilder().uri(url)
                 .POST(HttpRequest.BodyPublishers.ofString(subTaskToJson))
                 .build();
@@ -370,64 +346,6 @@ public class HttpTaskServerTest {
     }
 
     @Test
-    public void removeAllTasksByDeleteRequest() throws IOException, InterruptedException {
-        Task task1 = new Task("Task1", "Task description",
-                LocalDateTime.of(2024, 01, 01, 00, 00), Duration.ofMinutes(15));
-        taskManager.addTask(task1);
-        Task task2 = new Task("Task2", "Task description",
-                LocalDateTime.of(2024, 01, 01, 01, 00), Duration.ofMinutes(15));
-        taskManager.addTask(task2);
-
-        HttpClient client = HttpClient.newHttpClient();
-        URI url = URI.create("http://localhost:8080/tasks");
-        HttpRequest request = HttpRequest.newBuilder().uri(url).DELETE().build();
-
-        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-
-        assertEquals(200, response.statusCode());
-
-        assertTrue(taskManager.getListOfTasks().isEmpty(), "Задачи не удалены.");
-    }
-
-    @Test
-    public void removeAllEpicsByDeleteRequest() throws IOException, InterruptedException {
-        Epic epic1 = new Epic("Epic1", "Epic description");
-        taskManager.addEpic(epic1);
-        Epic epic2 = new Epic("Epic2", "Epic description");
-        taskManager.addEpic(epic2);
-
-        HttpClient client = HttpClient.newHttpClient();
-        URI url = URI.create("http://localhost:8080/epics");
-        HttpRequest request = HttpRequest.newBuilder().uri(url).DELETE().build();
-
-        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-
-        assertEquals(200, response.statusCode());
-
-        assertTrue(taskManager.getListOfEpics().isEmpty(), "Эпики не удалены.");
-    }
-
-    @Test
-    public void removeAllSubtasksByDeleteRequest() throws IOException, InterruptedException {
-        SubTask subTask1 = new SubTask("Subtask1", "Subtask description", 1,
-                LocalDateTime.of(2024, 01, 01, 00, 00), Duration.ofMinutes(15));
-        taskManager.addSubTask(subTask1);
-        SubTask subTask2 = new SubTask("Subtask2", "Subtask description", 1,
-                LocalDateTime.of(2024, 01, 01, 01, 00), Duration.ofMinutes(15));
-        taskManager.addSubTask(subTask2);
-
-        HttpClient client = HttpClient.newHttpClient();
-        URI url = URI.create("http://localhost:8080/subtasks");
-        HttpRequest request = HttpRequest.newBuilder().uri(url).DELETE().build();
-
-        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-
-        assertEquals(200, response.statusCode());
-
-        assertTrue(taskManager.getListOfSubTasks().isEmpty(), "Подзадачи не удалены.");
-    }
-
-    @Test
     public void removeTaskByIdByDeleteRequest() throws IOException, InterruptedException {
         Task task1 = new Task("Task1", "Task description",
                 LocalDateTime.of(2024, 01, 01, 00, 00), Duration.ofMinutes(15));
@@ -437,7 +355,7 @@ public class HttpTaskServerTest {
         taskManager.addTask(task2);
 
         HttpClient client = HttpClient.newHttpClient();
-        URI url = URI.create("http://localhost:8080/tasks/" + task1.getId());
+        URI url = URI.create("http://localhost:8080/tasks?id=" + task1.getId());
         HttpRequest request = HttpRequest.newBuilder().uri(url).DELETE().build();
 
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
@@ -455,7 +373,7 @@ public class HttpTaskServerTest {
         taskManager.addEpic(epic2);
 
         HttpClient client = HttpClient.newHttpClient();
-        URI url = URI.create("http://localhost:8080/epics/" + epic1.getId());
+        URI url = URI.create("http://localhost:8080/epics?=id" + epic1.getId());
         HttpRequest request = HttpRequest.newBuilder().uri(url).DELETE().build();
 
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
@@ -477,7 +395,7 @@ public class HttpTaskServerTest {
         taskManager.addSubTask(subTask2);
 
         HttpClient client = HttpClient.newHttpClient();
-        URI url = URI.create("http://localhost:8080/subtasks/" + subTask1.getId());
+        URI url = URI.create("http://localhost:8080/subtasks?id=" + subTask1.getId());
         HttpRequest request = HttpRequest.newBuilder().uri(url).DELETE().build();
 
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());

@@ -29,6 +29,4 @@ DS_Store
 README.md
 
 #исключить игнорирование GSON
-!lib/gson-2.10.1-javadoc.jar
-!lib/gson-2.10.1-sources.jar
 !lib/gson-2.10.1.jar

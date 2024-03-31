@@ -6,22 +6,23 @@ import java.util.Objects;
 
 public class SubTask extends Task {
     private final int epicId;
-    protected TaskType type;
 
     public SubTask(String title, String description, int epicId) {
         super(title, description);
         this.epicId = epicId;
-        this.type = TaskType.SUBTASK;
     }
 
     public SubTask(String title, String description, int epicId, LocalDateTime startTime, Duration duration) {
         super(title, description, startTime, duration);
         this.epicId = epicId;
-        this.type = TaskType.SUBTASK;
     }
 
     public int getEpicId() {
         return epicId;
+    }
+
+    public void setType() {
+        this.type = TaskType.SUBTASK;
     }
 
     public TaskType getType() {
@@ -45,12 +46,14 @@ public class SubTask extends Task {
     @Override
     public String toString() {
         return "SubTask{" +
-                "title='" + title + '\'' +
+                "id=" + id + '\'' +
+                ", type=" + type + '\'' +
+                ", title='" + title + '\'' +
+                ", status=" + status + '\'' +
                 ", description='" + description + '\'' +
-                ", id='" + id + '\'' +
-                ", status='" + status + '\'' +
-                ", epic ID='" + epicId + '\'' +
-                ", startTime='" + startTime + '\'' +
-                ", duration='" + duration + '}' + '\'';
+                ", epicId=" + epicId + '\'' +
+                ", startTime=" + startTime + '\'' +
+                ", duration=" + duration +
+                '}';
     }
 }

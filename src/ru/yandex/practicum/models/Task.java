@@ -17,14 +17,12 @@ public class Task {
         this.title = title;
         this.description = description;
         this.status = TaskStatus.NEW;
-        this.type = TaskType.TASK;
     }
 
     public Task(String title, String description, LocalDateTime startTime, Duration duration) {
         this.title = title;
         this.description = description;
         this.status = TaskStatus.NEW;
-        this.type = TaskType.TASK;
         this.startTime = startTime;
         this.duration = duration;
     }
@@ -59,6 +57,10 @@ public class Task {
 
     public void setStatus(TaskStatus status) {
         this.status = status;
+    }
+
+    public void setType() {
+        this.type = TaskType.TASK;
     }
 
     public TaskType getType() {
@@ -105,11 +107,13 @@ public class Task {
     @Override
     public String toString() {
         return "Task{" +
-                "title='" + title + '\'' +
+                "id=" + id + '\'' +
+                ", type=" + type + '\'' +
+                ", title='" + title + '\'' +
+                ", status=" + status + '\'' +
                 ", description='" + description + '\'' +
-                ", id='" + id + '\'' +
-                ", status='" + status + '\'' +
-                ", startTime='" + startTime + '\'' +
-                ", duration='" + duration + '}' + '\'';
+                ", startTime=" + startTime + '\'' +
+                ", duration=" + duration +
+                '}';
     }
 }

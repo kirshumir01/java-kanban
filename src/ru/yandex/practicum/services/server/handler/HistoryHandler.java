@@ -8,6 +8,7 @@ import ru.yandex.practicum.services.taskmanager.TaskManager;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.regex.Pattern;
 
 public class HistoryHandler implements HttpHandler {
     private final TaskManager taskManager;
@@ -19,32 +20,36 @@ public class HistoryHandler implements HttpHandler {
     }
 
     @Override
-    public void handle(HttpExchange exchange) throws IOException {
-        // получить метод
+    public void handle(HttpExchange exchange) {
+        String path = exchange.getRequestURI().getPath();
         String method = exchange.getRequestMethod();
-        // разбить путь на части
-        String[] pathParts = exchange.getRequestURI().getPath().split("/");
-        String response;
 
-        switch (method) {
-            case "GET": {
-                if (pathParts.length == 2 && pathParts[1].equals("history")) {
-                    response = gson.toJson(taskManager.getHistory());
-                    writeResponse(exchange, response, 200);
+        try {
+            switch (method) {
+                case "GET": {
+                    // ecли путь "/tasks"
+                    if (Pattern.matches("^/history$", path)) {
+                        String response = gson.toJson(taskManager.getHistory());
+                        writeResponse(exchange, response);
+                    }
+                    break;
                 }
-                break;
+                default: {
+                    System.out.println("Обработка эндпоинта " + method + " не предусмотрена программой");
+                    exchange.sendResponseHeaders(404, 0);
+                }
             }
-            default:
-                writeResponse(exchange, "Обработка эндпоинта " + method + " не предусмотрена программой", 404);
-                break;
+        } catch (Exception exception) {
+            exception.printStackTrace();
+        } finally {
+            exchange.close();
         }
     }
 
-    private void writeResponse(HttpExchange exchange, String responseString, int responseCode) throws IOException {
+    private void writeResponse(HttpExchange exchange, String responseString) throws IOException {
         byte[] response = responseString.getBytes(StandardCharsets.UTF_8);
         exchange.getResponseHeaders().add("Content-Type", "application/json;charset=utf-8");
-        exchange.sendResponseHeaders(responseCode, response.length);
+        exchange.sendResponseHeaders(200, response.length);
         exchange.getResponseBody().write(response);
-        exchange.close();
     }
 }

@@ -3,9 +3,6 @@ package ru.yandex.practicum.services.server;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.sun.net.httpserver.HttpServer;
-import ru.yandex.practicum.models.Epic;
-import ru.yandex.practicum.models.SubTask;
-import ru.yandex.practicum.models.Task;
 import ru.yandex.practicum.services.filemanager.FileBackedTaskManager;
 import ru.yandex.practicum.services.server.adapters.*;
 import ru.yandex.practicum.services.server.handler.*;
@@ -41,9 +38,6 @@ public class HttpTaskServer {
     public static Gson getGson() {
         GsonBuilder gsonBuilder = new GsonBuilder();
         gsonBuilder
-                .registerTypeAdapter(Task.class, new TaskAdapter())
-                .registerTypeAdapter(Epic.class, new EpicAdapter())
-                .registerTypeAdapter(SubTask.class, new SubTaskAdapter())
                 .registerTypeAdapter(LocalDateTime.class, new LocalDateTimeAdapter())
                 .registerTypeAdapter(Duration.class, new DurationAdapter())
                 .serializeNulls()
