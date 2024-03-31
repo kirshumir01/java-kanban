@@ -119,7 +119,7 @@ public class TasksHandler implements HttpHandler {
             }
         } catch(Exception exception){
             exception.printStackTrace();
-        } finally{
+        } finally {
             exchange.close();
         }
     }
