@@ -110,7 +110,7 @@ public class EpicsHandler implements HttpHandler {
                     exchange.sendResponseHeaders(404, 0);
                 }
             }
-        } catch(Exception exception){
+        } catch (Exception exception) {
             exception.printStackTrace();
         } finally {
             exchange.close();
