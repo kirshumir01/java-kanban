@@ -59,12 +59,8 @@ public class Task {
         this.status = status;
     }
 
-    public void setType() {
-        this.type = TaskType.TASK;
-    }
-
     public TaskType getType() {
-        return type;
+        return TaskType.TASK;
     }
 
     public LocalDateTime getStartTime() {

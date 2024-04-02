@@ -16,12 +16,8 @@ public class Epic extends Task {
         return subTaskIdList;
     }
 
-    public void setType() {
-        this.type = TaskType.EPIC;
-    }
-
     public TaskType getType() {
-        return type;
+        return TaskType.EPIC;
     }
 
     @Override
@@ -54,6 +50,7 @@ public class Epic extends Task {
                 ", type=" + type + '\'' +
                 ", title='" + title + '\'' +
                 ", status=" + status + '\'' +
+                ", subTasks' ID='" + subTaskIdList + '\'' +
                 ", description='" + description + '\'' +
                 ", startTime=" + startTime + '\'' +
                 ", duration=" + duration +

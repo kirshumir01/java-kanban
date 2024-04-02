@@ -360,7 +360,7 @@ public class HttpTaskServerTest {
 
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
-        assertEquals(200, response.statusCode());
+        assertEquals(204, response.statusCode());
 
         assertFalse(taskManager.getListOfTasks().contains(task1), "Задача не удалена.");
     }
@@ -378,7 +378,7 @@ public class HttpTaskServerTest {
 
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
-        assertEquals(200, response.statusCode());
+        assertEquals(204, response.statusCode());
 
         assertFalse(taskManager.getListOfEpics().contains(epic1), "Эпик не удален.");
     }
@@ -427,7 +427,7 @@ public class HttpTaskServerTest {
 
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
-        assertEquals(200, response.statusCode());
+        assertEquals(204, response.statusCode());
 
         assertEquals(sortedTasksToJson, response.body(), "Список задач не соответствует.");
     }

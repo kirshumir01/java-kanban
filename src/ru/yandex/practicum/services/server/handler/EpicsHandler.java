@@ -2,17 +2,15 @@ package ru.yandex.practicum.services.server.handler;
 
 import com.google.gson.Gson;
 import com.sun.net.httpserver.HttpExchange;
-import com.sun.net.httpserver.HttpHandler;
 import ru.yandex.practicum.models.Epic;
-import ru.yandex.practicum.models.TaskStatus;
+import ru.yandex.practicum.services.exceptions.ManagerTaskNotFoundException;
 import ru.yandex.practicum.services.server.HttpTaskServer;
 import ru.yandex.practicum.services.taskmanager.TaskManager;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.util.regex.Pattern;
 
-public class EpicsHandler implements HttpHandler {
+public class EpicsHandler extends AbstractHandler {
     private final TaskManager taskManager;
     private final Gson gson;
 
@@ -22,7 +20,7 @@ public class EpicsHandler implements HttpHandler {
     }
 
     @Override
-    public void handle(HttpExchange exchange) {
+    public void handle(HttpExchange exchange) throws IOException {
         String path = exchange.getRequestURI().getPath();
         String method = exchange.getRequestMethod();
 
@@ -40,30 +38,17 @@ public class EpicsHandler implements HttpHandler {
                     if (Pattern.matches("^/epics/\\d+$", path)) {
                         String pathId = path.replaceFirst("/epics/", "");
                         int id = parsePathId(pathId);
-
-                        if (id != -1 && taskManager.getEpicById(id) != null) {
-                            String response = gson.toJson(taskManager.getEpicById(id));
-                            writeResponse(exchange, response);
-                        } else {
-                            System.out.println("Получен некорректный идентификатор эпика: " + pathId);
-                            exchange.sendResponseHeaders(404, 0);
-                        }
+                        String response = gson.toJson(taskManager.getEpicById(id));
+                        writeResponse(exchange, response);
                         break;
                     }
 
                     // ecли путь "/epics/{id}/subtasks"
                     if (Pattern.matches("^/epics/\\d+/subtasks$", path)) {
-                        String pathId = path.replaceFirst("/epics/", "")
-                                .replaceFirst("/subtasks", "");
+                        String pathId = path.replaceFirst("/epics/", "").replaceFirst("/subtasks", "");
                         int id = parsePathId(pathId);
-
-                        if (id != -1 && taskManager.getEpicById(id) != null) {
-                            String response = gson.toJson(taskManager.getListOfSubTasksByEpic(id));
-                            writeResponse(exchange, response);
-                        } else {
-                            System.out.println("Получен некорректный идентификатор эпика: " + pathId);
-                            exchange.sendResponseHeaders(404, 0);
-                        }
+                        String response = gson.toJson(taskManager.getListOfSubTasksByEpic(id));
+                        writeResponse(exchange, response);
                         break;
                     }
                     break;
@@ -76,15 +61,9 @@ public class EpicsHandler implements HttpHandler {
                         if (query != null) {
                             String pathId = query.substring(3);
                             int id = parsePathId(pathId);
-
-                            if (id != -1 && taskManager.getEpicById(id) != null) {
-                                taskManager.removeEpicById(id);
-                                System.out.println("Эпик с идентификатором " + id + " удален");
-                                exchange.sendResponseHeaders(200, 0);
-                            } else {
-                                System.out.println("Получен некорректный идентификатор эпика: " + pathId);
-                                exchange.sendResponseHeaders(404, 0);
-                            }
+                            taskManager.removeEpicById(id);
+                            System.out.println("Эпик с идентификатором " + id + " удален");
+                            sendDeletedTaskContentResponseHeaders(exchange);
                         } else {
                             System.out.println("В строке запроса отсутствуют параметры");
                             exchange.sendResponseHeaders(404, 0);
@@ -95,13 +74,23 @@ public class EpicsHandler implements HttpHandler {
                 case "POST": {
                     String request = readRequest(exchange);
                     Epic epic = gson.fromJson(request, Epic.class);
-                    epic.setStatus(TaskStatus.NEW);
 
                     // ecли путь "/epics"
                     if (Pattern.matches("^/epics$", path)) {
-                        taskManager.addEpic(epic);
-                        System.out.println("Эпик успешно добавлен, эпику присвоен идентификатор " + epic.getId());
-                        exchange.sendResponseHeaders(201, 0);
+                        String query = exchange.getRequestURI().getQuery();
+
+                        if (query != null) {
+                            String pathId = query.substring(3);
+                            int id = parsePathId(pathId);
+                            epic.setId(id);
+                            taskManager.updateEpic(epic);
+                            System.out.println("Эпик c идентификатором " + epic.getId() + " успешно обновлен");
+                            sendCreatedTaskContentResponseHeaders(exchange);
+                        } else {
+                            taskManager.addEpic(epic);
+                            System.out.println("Эпик успешно добавлен, эпику присвоен идентификатор " + epic.getId());
+                            sendCreatedTaskContentResponseHeaders(exchange);
+                        }
                     }
                     break;
                 }
@@ -110,31 +99,14 @@ public class EpicsHandler implements HttpHandler {
                     exchange.sendResponseHeaders(404, 0);
                 }
             }
-        } catch (Exception exception) {
-            exception.printStackTrace();
+        } catch (NumberFormatException exception) {
+            sendErrorRequestResponseHeaders(exchange);
+        } catch (ManagerTaskNotFoundException exception) {
+            System.out.println("Получен некорректный идентификатор эпика");
+            sendNotFoundRequestResponseHeaders(exchange);
         } finally {
+            sendInternalServerErrorResponseHeaders(exchange);
             exchange.close();
         }
-    }
-
-    private int parsePathId(String pathId) {
-        try {
-            return Integer.parseInt(pathId);
-        } catch (NumberFormatException exception) {
-            return -1;
-        }
-    }
-
-    // обработать запрос клиента
-    private String readRequest(HttpExchange exchange) throws IOException {
-        return new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.UTF_8);
-    }
-
-    // сформировать ответ сервера
-    private void writeResponse(HttpExchange exchange, String responseString) throws IOException {
-        byte[] response = responseString.getBytes(StandardCharsets.UTF_8);
-        exchange.getResponseHeaders().add("Content-Type", "application/json;charset=utf-8");
-        exchange.sendResponseHeaders(200, response.length);
-        exchange.getResponseBody().write(response);
     }
 }
