@@ -8,6 +8,8 @@ import ru.yandex.practicum.services.server.HttpTaskServer;
 import ru.yandex.practicum.services.taskmanager.TaskManager;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.regex.Pattern;
 
 public class EpicsHandler extends AbstractHandler {
@@ -21,10 +23,13 @@ public class EpicsHandler extends AbstractHandler {
 
     @Override
     public void handle(HttpExchange exchange) throws IOException {
+        final InputStream inputStream = exchange.getRequestBody();
+        final OutputStream outputStream = exchange.getResponseBody();
+
         String path = exchange.getRequestURI().getPath();
         String method = exchange.getRequestMethod();
 
-        try {
+        try (inputStream; outputStream) {
             switch (method) {
                 case "GET": {
                     // ecли путь "/epics"
@@ -62,11 +67,9 @@ public class EpicsHandler extends AbstractHandler {
                             String pathId = query.substring(3);
                             int id = parsePathId(pathId);
                             taskManager.removeEpicById(id);
-                            System.out.println("Эпик с идентификатором " + id + " удален");
-                            sendDeletedTaskContentResponseHeaders(exchange);
+                            sendDeletedTaskContentResponseHeaders(exchange, id);
                         } else {
-                            System.out.println("В строке запроса отсутствуют параметры");
-                            exchange.sendResponseHeaders(404, 0);
+                            sendNotFoundIdInQueryStringResponseHeaders(exchange);
                         }
                     }
                     break;
@@ -84,29 +87,29 @@ public class EpicsHandler extends AbstractHandler {
                             int id = parsePathId(pathId);
                             epic.setId(id);
                             taskManager.updateEpic(epic);
-                            System.out.println("Эпик c идентификатором " + epic.getId() + " успешно обновлен");
-                            sendCreatedTaskContentResponseHeaders(exchange);
+                            sendUpdatedTaskContentResponseHeaders(exchange, id);
                         } else {
                             taskManager.addEpic(epic);
-                            System.out.println("Эпик успешно добавлен, эпику присвоен идентификатор " + epic.getId());
-                            sendCreatedTaskContentResponseHeaders(exchange);
+                            sendCreatedTaskContentResponseHeaders(exchange, epic.getId());
                         }
                     }
                     break;
                 }
                 default: {
-                    System.out.println("Обработка эндпоинта " + method + " не предусмотрена программой");
-                    exchange.sendResponseHeaders(404, 0);
+                    sendNotFoundEndpointResponseHeaders(exchange, method);
                 }
             }
         } catch (NumberFormatException exception) {
             sendErrorRequestResponseHeaders(exchange);
         } catch (ManagerTaskNotFoundException exception) {
-            System.out.println("Получен некорректный идентификатор эпика");
             sendNotFoundRequestResponseHeaders(exchange);
-        } finally {
-            sendInternalServerErrorResponseHeaders(exchange);
-            exchange.close();
+        } catch (Throwable exception) {
+            Throwable[] suppressedExceptions = exception.getSuppressed();
+
+            for (int i = 0; i < suppressedExceptions.length; i++) {
+                System.out.println("Подавленные исключения:");
+                System.out.println(i + ". " + suppressedExceptions[i]);
+            }
         }
     }
 }

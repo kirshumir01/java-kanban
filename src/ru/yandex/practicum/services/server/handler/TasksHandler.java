@@ -8,6 +8,8 @@ import ru.yandex.practicum.services.server.HttpTaskServer;
 import ru.yandex.practicum.services.taskmanager.TaskManager;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.regex.Pattern;
 
 public class TasksHandler extends AbstractHandler {
@@ -21,10 +23,13 @@ public class TasksHandler extends AbstractHandler {
 
     @Override
     public void handle(HttpExchange exchange) throws IOException {
+        final InputStream inputStream = exchange.getRequestBody();
+        final OutputStream outputStream = exchange.getResponseBody();
+
         String path = exchange.getRequestURI().getPath();
         String method = exchange.getRequestMethod();
 
-        try {
+        try (inputStream; outputStream) {
             switch (method) {
                 case "GET": {
                     // ecли путь "/tasks"
@@ -53,11 +58,9 @@ public class TasksHandler extends AbstractHandler {
                             String pathId = query.substring(3);
                             int id = parsePathId(pathId);
                             taskManager.removeTaskById(id);
-                            System.out.println("Задача с идентификатором " + id + " удалена");
-                            sendDeletedTaskContentResponseHeaders(exchange);
+                            sendDeletedTaskContentResponseHeaders(exchange, id);
                         } else {
-                            System.out.println("В строке запроса отсутствуют параметры");
-                            exchange.sendResponseHeaders(404, 0);
+                            sendNotFoundIdInQueryStringResponseHeaders(exchange);
                         }
                     }
                     break;
@@ -68,7 +71,6 @@ public class TasksHandler extends AbstractHandler {
 
                     // проверка задачи на пересечение с остальными задачами в sortedList
                     if (taskManager.isCrossingTasks(task)) {
-                        System.out.println("Задача пересекается по времени с существующими задачами");
                         sendIsCrossingTasksResponseHeaders(exchange);
                         break;
                     }
@@ -82,19 +84,16 @@ public class TasksHandler extends AbstractHandler {
                             int id = parsePathId(pathId);
                             task.setId(id);
                             taskManager.updateTask(task);
-                            System.out.println("Задача c идентификатором " + task.getId() + " успешно обновлена");
-                            sendCreatedTaskContentResponseHeaders(exchange);
+                            sendUpdatedTaskContentResponseHeaders(exchange, id);
                         } else {
                             taskManager.addTask(task);
-                            System.out.println("Задача успешно добавлена, задаче присвоен идентификатор " + task.getId());
-                            sendCreatedTaskContentResponseHeaders(exchange);
+                            sendCreatedTaskContentResponseHeaders(exchange, task.getId());
                         }
                     }
                     break;
                 }
                 default: {
-                    System.out.println("Обработка эндпоинта " + method + " не предусмотрена программой");
-                    exchange.sendResponseHeaders(404, 0);
+                    sendNotFoundEndpointResponseHeaders(exchange, method);
                 }
             }
         } catch (NumberFormatException exception) {
@@ -104,9 +103,13 @@ public class TasksHandler extends AbstractHandler {
             sendNotFoundRequestResponseHeaders(exchange);
         } catch (Exception exception) {
             exception.printStackTrace();
-        } finally {
-            sendInternalServerErrorResponseHeaders(exchange);
-            exchange.close();
+        } catch (Throwable exception) {
+            Throwable[] suppressedExceptions = exception.getSuppressed();
+
+            for (int i = 0; i < suppressedExceptions.length; i++) {
+                System.out.println("Подавленные исключения:");
+                System.out.println(i + ". " + suppressedExceptions[i]);
+            }
         }
     }
 }

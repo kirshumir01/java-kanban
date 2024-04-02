@@ -1,4 +1,0 @@
-id,type,name,status,description,epic,startTime,duration,endTime
-1,EPIC,Epic,NEW,Epic description,null,01.01.2024 01:00,15,01.01.2024 01:15
-3,SUBTASK,Subtask2,NEW,Subtask description,1,01.01.2024 01:00,15,01.01.2024 01:15
-
