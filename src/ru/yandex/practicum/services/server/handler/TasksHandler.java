@@ -99,7 +99,6 @@ public class TasksHandler extends AbstractHandler {
         } catch (NumberFormatException exception) {
             sendErrorRequestResponseHeaders(exchange);
         } catch (ManagerTaskNotFoundException exception) {
-            System.out.println("Получен некорректный идентификатор задачи");
             sendNotFoundRequestResponseHeaders(exchange);
         } catch (Exception exception) {
             exception.printStackTrace();

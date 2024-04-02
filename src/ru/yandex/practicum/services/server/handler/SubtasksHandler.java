@@ -99,7 +99,6 @@ public class SubtasksHandler extends AbstractHandler {
         } catch (NumberFormatException exception) {
             sendErrorRequestResponseHeaders(exchange);
         } catch (ManagerTaskNotFoundException exception) {
-            System.out.println("Получен некорректный идентификатор эпика");
             sendNotFoundRequestResponseHeaders(exchange);
         } catch (Throwable exception) {
             Throwable[] suppressedExceptions = exception.getSuppressed();
