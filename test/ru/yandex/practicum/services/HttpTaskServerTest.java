@@ -400,7 +400,7 @@ public class HttpTaskServerTest {
 
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
-        assertEquals(200, response.statusCode());
+        assertEquals(204, response.statusCode());
 
         assertFalse(taskManager.getListOfSubTasks().contains(subTask1), "Подзадача не удалена.");
     }
@@ -427,7 +427,7 @@ public class HttpTaskServerTest {
 
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
-        assertEquals(204, response.statusCode());
+        assertEquals(200, response.statusCode());
 
         assertEquals(sortedTasksToJson, response.body(), "Список задач не соответствует.");
     }
