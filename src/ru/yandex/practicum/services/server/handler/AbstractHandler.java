@@ -9,11 +9,7 @@ import java.nio.charset.StandardCharsets;
 public abstract class AbstractHandler implements HttpHandler {
 
     protected int parsePathId(String pathId) {
-        try {
-            return Integer.parseInt(pathId);
-        } catch (NumberFormatException exception) {
-            return -1;
-        }
+        return Integer.parseInt(pathId);
     }
 
     protected String readRequest(HttpExchange exchange) throws IOException {
@@ -39,6 +35,11 @@ public abstract class AbstractHandler implements HttpHandler {
 
     protected void sendDeletedTaskContentResponseHeaders(HttpExchange exchange, int id) throws IOException {
         System.out.println("Задача с идентификатором " + id + " удалена");
+        exchange.sendResponseHeaders(204, -1);
+    }
+
+    protected void sendDeletedAllTasksContentResponseHeaders(HttpExchange exchange) throws IOException {
+        System.out.println("Все задачи успешно удалены");
         exchange.sendResponseHeaders(204, -1);
     }
 

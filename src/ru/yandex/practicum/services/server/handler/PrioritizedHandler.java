@@ -5,8 +5,7 @@ import com.sun.net.httpserver.HttpExchange;
 import ru.yandex.practicum.services.server.HttpTaskServer;
 import ru.yandex.practicum.services.taskmanager.TaskManager;
 
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.IOException;
 import java.util.regex.Pattern;
 
 public class PrioritizedHandler extends AbstractHandler {
@@ -19,14 +18,11 @@ public class PrioritizedHandler extends AbstractHandler {
     }
 
     @Override
-    public void handle(HttpExchange exchange) {
-        final InputStream inputStream = exchange.getRequestBody();
-        final OutputStream outputStream = exchange.getResponseBody();
-
+    public void handle(HttpExchange exchange) throws IOException {
         String path = exchange.getRequestURI().getPath();
         String method = exchange.getRequestMethod();
 
-        try (inputStream; outputStream) {
+        try (exchange) {
             switch (method) {
                 case "GET": {
                     if (Pattern.matches("^/prioritized$", path)) {
@@ -42,12 +38,8 @@ public class PrioritizedHandler extends AbstractHandler {
         } catch (Exception exception) {
             exception.printStackTrace();
         } catch (Throwable exception) {
-            Throwable[] suppressedExceptions = exception.getSuppressed();
-
-            for (int i = 0; i < suppressedExceptions.length; i++) {
-                System.out.println("Подавленные исключения:");
-                System.out.println(i + ". " + suppressedExceptions[i]);
-            }
+            exception.printStackTrace();
+            sendInternalServerErrorResponseHeaders(exchange);
         }
     }
 }

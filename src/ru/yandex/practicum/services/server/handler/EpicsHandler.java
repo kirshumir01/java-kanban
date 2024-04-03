@@ -8,8 +8,6 @@ import ru.yandex.practicum.services.server.HttpTaskServer;
 import ru.yandex.practicum.services.taskmanager.TaskManager;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.util.regex.Pattern;
 
 public class EpicsHandler extends AbstractHandler {
@@ -23,13 +21,10 @@ public class EpicsHandler extends AbstractHandler {
 
     @Override
     public void handle(HttpExchange exchange) throws IOException {
-        final InputStream inputStream = exchange.getRequestBody();
-        final OutputStream outputStream = exchange.getResponseBody();
-
         String path = exchange.getRequestURI().getPath();
         String method = exchange.getRequestMethod();
 
-        try (inputStream; outputStream) {
+        try (exchange) {
             switch (method) {
                 case "GET": {
                     // ecли путь "/epics"
@@ -41,7 +36,7 @@ public class EpicsHandler extends AbstractHandler {
 
                     // ecли путь "/epics/{id}"
                     if (Pattern.matches("^/epics/\\d+$", path)) {
-                        String pathId = path.replaceFirst("/epics/", "");
+                        String pathId = path.substring(7);
                         int id = parsePathId(pathId);
                         String response = gson.toJson(taskManager.getEpicById(id));
                         writeResponse(exchange, response);
@@ -50,7 +45,7 @@ public class EpicsHandler extends AbstractHandler {
 
                     // ecли путь "/epics/{id}/subtasks"
                     if (Pattern.matches("^/epics/\\d+/subtasks$", path)) {
-                        String pathId = path.replaceFirst("/epics/", "").replaceFirst("/subtasks", "");
+                        String pathId = path.substring(7, (path.length() - 9));
                         int id = parsePathId(pathId);
                         String response = gson.toJson(taskManager.getListOfSubTasksByEpic(id));
                         writeResponse(exchange, response);
@@ -68,6 +63,9 @@ public class EpicsHandler extends AbstractHandler {
                             int id = parsePathId(pathId);
                             taskManager.removeEpicById(id);
                             sendDeletedTaskContentResponseHeaders(exchange, id);
+                        } else if (query == null) {
+                            taskManager.removeAllEpics();
+                            sendDeletedAllTasksContentResponseHeaders(exchange);
                         } else {
                             sendNotFoundIdInQueryStringResponseHeaders(exchange);
                         }
@@ -80,14 +78,9 @@ public class EpicsHandler extends AbstractHandler {
 
                     // ecли путь "/epics"
                     if (Pattern.matches("^/epics$", path)) {
-                        String query = exchange.getRequestURI().getQuery();
-
-                        if (query != null) {
-                            String pathId = query.substring(3);
-                            int id = parsePathId(pathId);
-                            epic.setId(id);
+                        if (epic.getId() != null) {
                             taskManager.updateEpic(epic);
-                            sendUpdatedTaskContentResponseHeaders(exchange, id);
+                            sendUpdatedTaskContentResponseHeaders(exchange, epic.getId());
                         } else {
                             taskManager.addEpic(epic);
                             sendCreatedTaskContentResponseHeaders(exchange, epic.getId());
@@ -104,12 +97,8 @@ public class EpicsHandler extends AbstractHandler {
         } catch (ManagerTaskNotFoundException exception) {
             sendNotFoundRequestResponseHeaders(exchange);
         } catch (Throwable exception) {
-            Throwable[] suppressedExceptions = exception.getSuppressed();
-
-            for (int i = 0; i < suppressedExceptions.length; i++) {
-                System.out.println("Подавленные исключения:");
-                System.out.println(i + ". " + suppressedExceptions[i]);
-            }
+            exception.printStackTrace();
+            sendInternalServerErrorResponseHeaders(exchange);
         }
     }
 }

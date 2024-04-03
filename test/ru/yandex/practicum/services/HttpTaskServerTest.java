@@ -355,6 +355,45 @@ public class HttpTaskServerTest {
     }
 
     @Test
+    public void removeAllTasksByDeleteRequest() throws IOException, InterruptedException {
+        HttpClient client = HttpClient.newHttpClient();
+        URI url = URI.create("http://localhost:8080/tasks");
+        HttpRequest request = HttpRequest.newBuilder().uri(url).DELETE().build();
+
+        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+
+        assertEquals(204, response.statusCode());
+
+        assertTrue(taskManager.getListOfTasks().isEmpty(), "Задачи не удалены.");
+    }
+
+    @Test
+    public void removeAllEpicsByDeleteRequest() throws IOException, InterruptedException {
+        HttpClient client = HttpClient.newHttpClient();
+        URI url = URI.create("http://localhost:8080/epics");
+        HttpRequest request = HttpRequest.newBuilder().uri(url).DELETE().build();
+
+        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+
+        assertEquals(204, response.statusCode());
+
+        assertTrue(taskManager.getListOfEpics().isEmpty(), "Эпики не удалены.");
+    }
+
+    @Test
+    public void removeAllSubtasksByDeleteRequest() throws IOException, InterruptedException {
+        HttpClient client = HttpClient.newHttpClient();
+        URI url = URI.create("http://localhost:8080/subtasks");
+        HttpRequest request = HttpRequest.newBuilder().uri(url).DELETE().build();
+
+        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+
+        assertEquals(204, response.statusCode());
+
+        assertTrue(taskManager.getListOfSubTasks().isEmpty(), "Подзадачи не удалены.");
+    }
+
+    @Test
     public void removeTaskByIdByDeleteRequest() throws IOException, InterruptedException {
         HttpClient client = HttpClient.newHttpClient();
         URI url = URI.create("http://localhost:8080/tasks?id=" + 1);
