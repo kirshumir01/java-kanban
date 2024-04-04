@@ -6,13 +6,10 @@ import java.util.Objects;
 
 public class Epic extends Task {
     private final ArrayList<Integer> subTaskIdList = new ArrayList<>();
-
-    private TaskType type;
     private LocalDateTime endTime;
 
     public Epic(String title, String description) {
         super(title, description);
-        this.type = TaskType.EPIC;
     }
 
     public ArrayList<Integer> getSubtasksId() {
@@ -20,7 +17,7 @@ public class Epic extends Task {
     }
 
     public TaskType getType() {
-        return type;
+        return TaskType.EPIC;
     }
 
     @Override
@@ -49,13 +46,14 @@ public class Epic extends Task {
     @Override
     public String toString() {
         return "Epic{" +
-                "title='" + title + '\'' +
-                ", description='" + description + '\'' +
-                ", id='" + id + '\'' +
-                ", status='" + status + '\'' +
+                "id=" + id + '\'' +
+                ", type=" + type + '\'' +
+                ", title='" + title + '\'' +
+                ", status=" + status + '\'' +
                 ", subTasks' ID='" + subTaskIdList + '\'' +
-                ", startTime='" + startTime + '\'' +
-                ", endTime='" + endTime + '\'' +
-                ", duration='" + duration + '}' + '\'';
+                ", description='" + description + '\'' +
+                ", startTime=" + startTime + '\'' +
+                ", duration=" + duration +
+                '}';
     }
 }

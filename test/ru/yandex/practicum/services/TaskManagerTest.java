@@ -1,12 +1,15 @@
 package ru.yandex.practicum.services;
 
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import ru.yandex.practicum.models.Epic;
 import ru.yandex.practicum.models.SubTask;
 import ru.yandex.practicum.models.Task;
 import ru.yandex.practicum.models.TaskStatus;
+import ru.yandex.practicum.services.exceptions.ManagerTaskNotFoundException;
 import ru.yandex.practicum.services.taskmanager.TaskManager;
 
+import java.lang.reflect.Executable;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -54,6 +57,8 @@ abstract class TaskManagerTest<T extends TaskManager> {
 
     @Test
     void addSubTaskTest() {
+        Epic epic = new Epic("Epic", "Epic description");
+        taskManager.addEpic(epic);
         SubTask subTask = new SubTask("Subtask", "Subtask description", 1);
         taskManager.addSubTask(subTask);
 
@@ -90,6 +95,8 @@ abstract class TaskManagerTest<T extends TaskManager> {
 
     @Test
     void getAllSubTasksTest() {
+        Epic epic = new Epic("Epic", "Epic description");
+        taskManager.addEpic(epic);
         SubTask subTask = new SubTask("Subtask", "Subtask description", 1);
         taskManager.addSubTask(subTask);
 
@@ -102,11 +109,13 @@ abstract class TaskManagerTest<T extends TaskManager> {
         Task task = new Task("Task", "Task description");
         taskManager.addTask(task);
 
-        Task taskByCustomId = taskManager.getTaskById(2);
-        assertNull(taskByCustomId, "Задача не соответствует.");
+        ManagerTaskNotFoundException thrown = Assertions.assertThrows(ManagerTaskNotFoundException.class, () -> {
+            taskManager.getTaskById(2);
+        }, "Ожидалось получение исключения");
 
-        taskByCustomId = taskManager.getTaskById(task.getId());
-        assertEquals(task, taskByCustomId, "Задача не соответствует.");
+        assertEquals("Задача типа TASK не найдена в менеджере", thrown.getMessage());
+
+        assertEquals(task, taskManager.getTaskById(task.getId()), "Задача не соответствует.");
     }
 
     @Test
@@ -114,11 +123,13 @@ abstract class TaskManagerTest<T extends TaskManager> {
         Epic epic = new Epic("Epic", "Epic description");
         taskManager.addEpic(epic);
 
-        Epic epicByCustomId = taskManager.getEpicById(2);
-        assertNull(epicByCustomId, "Задача не соответствует.");
+        ManagerTaskNotFoundException thrown = Assertions.assertThrows(ManagerTaskNotFoundException.class, () -> {
+            taskManager.getEpicById(2);
+        }, "Ожидалось получение исключения");
 
-        epicByCustomId = taskManager.getEpicById(epic.getId());
-        assertEquals(epic, epicByCustomId, "Задача не соответствует.");
+        assertEquals("Задача типа EPIC не найдена в менеджере", thrown.getMessage());
+
+        assertEquals(epic, taskManager.getEpicById(epic.getId()), "Задача не соответствует.");
     }
 
     @Test
@@ -128,13 +139,15 @@ abstract class TaskManagerTest<T extends TaskManager> {
         SubTask subTask = new SubTask("Subtask", "Subtask description", 1);
         taskManager.addSubTask(subTask);
 
-        SubTask subTaskByCustomId = taskManager.getSubTaskById(3);
-        assertNull(subTaskByCustomId, "Задача не соответствует.");
+        ManagerTaskNotFoundException thrown = Assertions.assertThrows(ManagerTaskNotFoundException.class, () -> {
+            taskManager.getSubTaskById(3);
+        }, "Ожидалось получение исключения");
 
-        subTaskByCustomId = taskManager.getSubTaskById(subTask.getId());
-        assertEquals(subTask, subTaskByCustomId, "Задача не соответствует.");
+        assertEquals("Задача типа SUBTASK не найдена в менеджере", thrown.getMessage());
 
-        assertEquals(epic.getSubtasksId().getFirst(), subTaskByCustomId.getId(),
+        assertEquals(subTask, taskManager.getSubTaskById(subTask.getId()), "Задача не соответствует.");
+
+        assertEquals(epic.getSubtasksId().getFirst(), subTask.getId(),
                 "id подзадачи в эпике не соответствует.");
     }
 
@@ -170,11 +183,13 @@ abstract class TaskManagerTest<T extends TaskManager> {
 
     @Test
     public void updateSubTaskTest() {
+        Epic epic = new Epic("Epic", "Epic description");
+        taskManager.addEpic(epic);
         SubTask subTask = new SubTask("SubTask", "SubTask description", 1);
         taskManager.addSubTask(subTask);
 
         SubTask newSubTask = new SubTask("SubTask", "Updated subtask", 1);
-        newSubTask.setId(1);
+        newSubTask.setId(2);
         taskManager.updateSubTask(newSubTask);
 
         final SubTask updatedSubTask = taskManager.getSubTaskById(subTask.getId());
@@ -212,7 +227,7 @@ abstract class TaskManagerTest<T extends TaskManager> {
     }
 
     @Test
-    public void removeAllTasksTest() {
+    public void removeAllTaskssTest() {
         Task task1 = new Task("Task1", "Task description");
         Task task2 = new Task("Task2", "Task description");
 
@@ -221,7 +236,7 @@ abstract class TaskManagerTest<T extends TaskManager> {
 
         assertEquals(2, taskManager.getListOfTasks().size(), "Размер списка не соответствует.");
 
-        taskManager.removeAllTask();
+        taskManager.removeAllTasks();
 
         assertEquals(0, taskManager.getListOfTasks().size(), "Список не очищен.");
     }

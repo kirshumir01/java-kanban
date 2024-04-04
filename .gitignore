@@ -1,6 +1,5 @@
 # directories
 .idea/
-lib/
 out/
 
 # class files
@@ -28,3 +27,6 @@ DS_Store
 
 # other files
 README.md
+
+#исключить игнорирование GSON
+!lib/gson-2.10.1.jar
