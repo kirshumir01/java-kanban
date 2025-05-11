@@ -66,7 +66,6 @@ public class InMemoryHistoryManager implements HistoryManager {
         }
     }
 
-    // fix: исправить метод, исключить двойные проверки, дополнить удалением просмотренной task из Map
     @Override
     public void add(Task task) {
         if (nodesByTaskIdMap.isEmpty()) {

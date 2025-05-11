@@ -20,12 +20,11 @@ public class HttpTaskServer {
     private TaskManager manager;
     private Gson gson;
 
-    // создать конструктор
     public HttpTaskServer(TaskManager manager) throws IOException {
         this.manager = manager;
 
         httpServer = HttpServer.create(new InetSocketAddress("localhost", PORT), 0);
-        // создать эндпоинты на каждый из пяти путей:
+
         httpServer.createContext("/tasks", new TasksHandler(manager));
         httpServer.createContext("/epics", new EpicsHandler(manager));
         httpServer.createContext("/subtasks", new SubtasksHandler(manager));
